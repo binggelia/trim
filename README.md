@@ -2,7 +2,7 @@
 
 ## lean.clarus.news · Andreas Binggeli & Ron Hyams · September 2026
 
-Screenshot capture with **multiple alphabetic flags on one image**. Each flag is classified with a complete **Wasteful → Lean Information attribute pair**, one or more **Improvement Suggestions**, an optional comment and an **Important × Urgent** priority.
+Screenshot capture with **multiple alphabetic flags on one image**. Each flag is classified with a complete **Wasteful → Lean Information attribute pair**, one or more **Improvement Suggestions**. The workflow remains local in the browser and does not use OCR or a backend.
 
 Single-screen cockpit, no backend, no OCR. Everything remains local in the browser.
 
@@ -21,7 +21,7 @@ v0.71 is a maintenance release of v0.7. It records and packages two corrections 
 
 2. **Framework footer attribution updated**
    - The cockpit and popup footer now credit **Ron Hyams & Andreas Binggeli**.
-   - `lead.clarus.news` is displayed as a clickable link to `https://lead.clarus.news`.
+   - `lean.clarus.news` is displayed as a clickable link to `https://lean.clarus.news`.
    - The link uses `target="_blank"` with `rel="noopener noreferrer"`, so it opens in a new browser tab/window without giving the opened page access to the opener.
 
 There is **no change to the v0.7 session data structure**. For compatibility, session JSON remains `trim.capture.session/0.7` and popup export JSON remains `trim.capture.export/0.7`.
@@ -210,8 +210,8 @@ There is no `fetch` call and no backend connection in v0.71.
 
 ## Framework notice
 
-Lean Information framework © **Ron Hyams & Andreas Binggeli** · [lead.clarus.news](https://lead.clarus.news) · CC BY-ND 4.0.
+Lean Information framework © **Ron Hyams & Andreas Binggeli** · [lean.clarus.news](https://lean.clarus.news) · CC BY-ND 4.0.
 
-In the extension UI, the `lead.clarus.news` footer link opens in a new browser tab/window.
+In the extension UI, the `lean.clarus.news` footer link opens in a new browser tab/window.
 
 The four visual attribute cues use colour plus distinct border styles, so colour is not the only means of differentiation.
