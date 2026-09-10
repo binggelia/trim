@@ -16,7 +16,7 @@ Maintenance release based on v0.7.
 
 - **Footer attribution**
   - Credit now reads: `Lean Information framework © Ron Hyams & Andreas Binggeli`.
-  - Add `lead.clarus.news` as a clickable link to `https://lead.clarus.news`.
+  - Add `lean.clarus.news` as a clickable link to `https://lean.clarus.news`.
   - The link opens in a new browser tab/window via `target="_blank"` and uses `rel="noopener noreferrer"`.
   - Applied to both the TRIM cockpit footer and the extension popup footer.
 
