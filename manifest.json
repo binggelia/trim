@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "TRIM – Lean Information Capture",
-  "version": "0.7.0",
+  "version": "0.71",
   "description": "Capture a screenshot, flag several wasteful information spots, classify each with Wasteful → Lean attribute pairs, add improvement suggestions, comments and Important/Urgent priority. Works fully offline.",
   "permissions": [
     "activeTab",
+    "scripting",
     "storage",
     "contextMenus",
     "tabs"

@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.7 – Background Service Worker
+// TRIM v0.71 – Background Service Worker
 // Owns: keyboard command, context menu, tab capture, local storage.
 // No network access anywhere in this version.
 // ============================================================
@@ -16,11 +16,21 @@ chrome.runtime.onInstalled.addListener(function () {
       contexts: ['page', 'selection', 'image']
     });
   });
-  console.log('[TRIM] v0.7 installed – local only, no backend.');
+  console.log('[TRIM] v0.71 installed – local only, no backend.');
 });
 
-chrome.commands.onCommand.addListener(function (command, tab) {
-  if (command === 'trim-capture') startCapture(tab);
+// Do not rely on the optional `tab` argument of chrome.commands.onCommand.
+// On some Chrome/Linux combinations it may be absent. Always resolve the
+// active tab explicitly, then launch TRIM there.
+chrome.commands.onCommand.addListener(function (command) {
+  if (command !== 'trim-capture') return;
+  chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
+    if (chrome.runtime.lastError || !tabs || !tabs[0]) {
+      showErrorBadge();
+      return;
+    }
+    startCapture(tabs[0]);
+  });
 });
 
 chrome.contextMenus.onClicked.addListener(function (info, tab) {
@@ -30,15 +40,19 @@ chrome.contextMenus.onClicked.addListener(function (info, tab) {
 // The popup and the in-page trigger button both route through here.
 chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
   if (msg.type === 'TRIM_REQUEST_CAPTURE') {
-    var tabId = (sender.tab && sender.tab.id) || msg.tabId;
-    capture(tabId, function (res) { sendResponse(res); });
+    var windowId = sender.tab && sender.tab.windowId;
+    capture(windowId, function (res) { sendResponse(res); });
     return true;
   }
   if (msg.type === 'TRIM_START') {
     // Popup asked for a capture on the active tab.
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      if (tabs && tabs[0]) startCapture(tabs[0]);
-      sendResponse({ ok: true });
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
+      if (tabs && tabs[0]) {
+        startCapture(tabs[0]);
+        sendResponse({ ok: true });
+      } else {
+        sendResponse({ ok: false, error: 'No active tab found' });
+      }
     });
     return true;
   }
@@ -59,10 +73,10 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
   return false;
 });
 
-function capture(tabId, done) {
+function capture(windowId, done) {
   var opts = { format: 'png' };
   try {
-    chrome.tabs.captureVisibleTab(null, opts, function (dataUrl) {
+    chrome.tabs.captureVisibleTab(windowId, opts, function (dataUrl) {
       if (chrome.runtime.lastError || !dataUrl) {
         done({ ok: false, error: (chrome.runtime.lastError || {}).message || 'capture failed' });
         return;
@@ -75,27 +89,86 @@ function capture(tabId, done) {
 }
 
 function startCapture(tab) {
-  if (!tab || !tab.id) return;
-  // Tell the content script to hide any of its own UI, then capture, then open.
-  chrome.tabs.sendMessage(tab.id, { type: 'TRIM_PREPARE' }, function () {
-    if (chrome.runtime.lastError) {
-      // No content script on this page (chrome://, web store, PDF viewer…).
-      chrome.action.setBadgeText({ text: '!' });
-      chrome.action.setBadgeBackgroundColor({ color: '#cc79a7' });
-      setTimeout(function () { chrome.action.setBadgeText({ text: '' }); }, 2500);
+  if (!tab || !tab.id) {
+    showErrorBadge();
+    return;
+  }
+
+  // Chrome internal pages, the Web Store and similar protected pages do not
+  // allow extension content scripts. Fail visibly instead of doing nothing.
+  if (!isScriptableUrl(tab.url || '')) {
+    showErrorBadge();
+    return;
+  }
+
+  // First try the already declared content script. If the extension was just
+  // loaded/reloaded, an existing page may not have received it yet. In that
+  // case inject model.js + content.js once and retry. This is important for
+  // Alt+Shift+T to work immediately without forcing a page reload.
+  ensureContentScript(tab, function (ok) {
+    if (!ok) {
+      showErrorBadge();
       return;
     }
-    setTimeout(function () {
-      capture(tab.id, function (res) {
-        if (!res.ok) return;
-        chrome.tabs.sendMessage(tab.id, {
-          type: 'TRIM_OPEN',
-          dataUrl: res.dataUrl,
-          page: { url: tab.url || '', title: tab.title || '' }
+
+    chrome.tabs.sendMessage(tab.id, { type: 'TRIM_PREPARE' }, function () {
+      if (chrome.runtime.lastError) {
+        showErrorBadge();
+        return;
+      }
+      setTimeout(function () {
+        capture(tab.windowId, function (res) {
+          if (!res.ok) {
+            showErrorBadge();
+            return;
+          }
+          chrome.tabs.sendMessage(tab.id, {
+            type: 'TRIM_OPEN',
+            dataUrl: res.dataUrl,
+            page: { url: tab.url || '', title: tab.title || '' }
+          }, function () {
+            if (chrome.runtime.lastError) showErrorBadge();
+          });
         });
-      });
-    }, 90);
+      }, 90);
+    });
   });
+}
+
+function ensureContentScript(tab, done) {
+  chrome.tabs.sendMessage(tab.id, { type: 'TRIM_PING' }, function (response) {
+    if (!chrome.runtime.lastError && response && response.ok) {
+      done(true);
+      return;
+    }
+
+    // Clear lastError by reading it above, then inject into the existing tab.
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['src/model.js', 'src/content.js']
+    }, function () {
+      if (chrome.runtime.lastError) {
+        done(false);
+        return;
+      }
+      // Give the injected listener a moment to register before continuing.
+      setTimeout(function () { done(true); }, 40);
+    });
+  });
+}
+
+function isScriptableUrl(url) {
+  return /^(https?|file):/i.test(url);
+}
+
+function showErrorBadge() {
+  try {
+    chrome.action.setBadgeText({ text: '!' });
+    chrome.action.setBadgeBackgroundColor({ color: '#cc79a7' });
+    setTimeout(function () { chrome.action.setBadgeText({ text: '' }); }, 2500);
+  } catch (e) {
+    // Nothing else to do if the action API itself is unavailable.
+  }
 }
 
 function saveSession(session, done) {

@@ -1,5 +1,5 @@
 /* ============================================================
-   TRIM v0.7 - Overlay styles
+   TRIM v0.71 - Overlay styles
    Loaded into a shadow root so host-page CSS cannot affect the cockpit.
    ============================================================ */
 
@@ -451,3 +451,11 @@ textarea:focus { outline: 0; border-color: var(--focus); box-shadow: 0 0 0 3px r
   .pair-row, .table-head { grid-template-columns: 220px minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* v0.71 footer attribution link */
+.trim-ui .foot a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.trim-ui .foot a:hover { color: #3d4852; }

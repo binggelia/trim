@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.7 – Shared model
+// TRIM v0.71 – Shared model
 // Lean Information framework (c) Ron Hyams / leaninformation.com
 // CC BY-ND 4.0 – attribute names and pairings are used verbatim.
 // Loaded by content script, service worker (importScripts) and popup.

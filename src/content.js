@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.7 - Content Script
+// TRIM v0.71 - Content Script
 // Screenshot markup + Lean Information classification cockpit.
 // One shadow root isolates the entire UI from the host page.
 // ============================================================
@@ -7,7 +7,9 @@
 (function () {
   'use strict';
 
-  if (window.__TRIM_V07__) return;
+  var TRIM_BUILD = '0.71-20260910-maintenance';
+  if (window.__TRIM_V07_BUILD__ === TRIM_BUILD) return;
+  window.__TRIM_V07_BUILD__ = TRIM_BUILD;
   window.__TRIM_V07__ = true;
 
   var lang = trimLangFrom(navigator.language);
@@ -102,6 +104,22 @@
     hideTrigger();
   }, true);
 
+  // In-page fallback for Alt+Shift+T. Chrome normally routes the shortcut via
+  // chrome.commands, but a suggested command can be left unassigned when it
+  // conflicts with another extension. If the keystroke reaches the page, this
+  // fallback still starts TRIM.
+  var lastShortcutAt = 0;
+  document.addEventListener('keydown', function (e) {
+    var key = String(e.key || '').toLowerCase();
+    if (!e.altKey || !e.shiftKey || e.ctrlKey || e.metaKey || key !== 't') return;
+    var now = Date.now();
+    if (now - lastShortcutAt < 800) return;
+    lastShortcutAt = now;
+    e.preventDefault();
+    e.stopPropagation();
+    if (!S.open) requestCapture(null);
+  }, true);
+
   function requestCapture(preRect) {
     ensureHost();
     hideTrigger();
@@ -122,6 +140,10 @@
   }
 
   chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
+    if (msg.type === 'TRIM_PING') {
+      sendResponse({ ok: true, version: '0.71' });
+      return true;
+    }
     if (msg.type === 'TRIM_PREPARE') {
       hideTrigger();
       if (overlay) overlay.classList.add('hidden');
@@ -256,7 +278,7 @@
           '</aside>' +
         '</div>' +
 
-        '<div class="foot"><span>Lean Information framework © Ron Hyams · leaninformation.com · CC BY-ND 4.0</span><span>v0.7 · local only</span></div>' +
+        '<div class="foot"><span>Lean Information framework © Ron Hyams &amp; Andreas Binggeli · <a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0</span><span>v0.71 · local only</span></div>' +
 
         '<div class="help-layer hidden" data-el="help">' +
           '<div class="help-box" role="dialog" aria-modal="true">' +
