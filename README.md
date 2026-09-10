@@ -210,8 +210,8 @@ There is no `fetch` call and no backend connection in v0.71.
 
 ## Framework notice
 
-Lean Information framework © **Ron Hyams & Andreas Binggeli** · [lead.clarus.news](https://lead.clarus.news) · CC BY-ND 4.0.
+Lean Information framework © **Ron Hyams & Andreas Binggeli** · [lead.clarus.news](https://lean.clarus.news) · CC BY-ND 4.0.
 
-In the extension UI, the `lead.clarus.news` footer link opens in a new browser tab/window.
+In the extension UI, the `lean.clarus.news` footer link opens in a new browser tab/window.
 
 The four visual attribute cues use colour plus distinct border styles, so colour is not the only means of differentiation.
