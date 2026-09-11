@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.71 – Popup
+// TRIM v0.72 – Popup
 // Lists locally stored sessions. External file because Manifest V3
 // blocks inline scripts on extension pages.
 // ============================================================
@@ -17,6 +17,15 @@
         'In the cockpit you drag as many rectangles as you need and classify each one.'
   };
 
+  var FOOTER = {
+    de: 'Lean Information Framework © Ron Hyams &amp; Andreas Binggeli · ' +
+        '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0<br>' +
+        'Keine Backend-Verbindung in dieser Version – nichts verlässt den Browser.',
+    en: 'Lean Information framework © Ron Hyams &amp; Andreas Binggeli · ' +
+        '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0<br>' +
+        'No backend in this version – nothing leaves the browser.'
+  };
+
   function applyLang() {
     document.getElementById('hint').innerHTML = HINT[lang];
     document.getElementById('btn-capture').textContent = t('captureNow');
@@ -24,6 +33,7 @@
     document.getElementById('btn-export').textContent = t('exportAll');
     document.getElementById('btn-clear').textContent = t('clearAll');
     document.getElementById('lbl-sessions').textContent = t('sessions');
+    document.getElementById('foot').innerHTML = FOOTER[lang];
     Array.prototype.forEach.call(document.querySelectorAll('[data-lang]'), function (b) {
       b.setAttribute('aria-pressed', b.getAttribute('data-lang') === lang ? 'true' : 'false');
     });
@@ -79,8 +89,8 @@
         sp.className = 'tag';
         if (p) { sp.style.borderColor = p.color; sp.style.borderStyle = p.style; }
         sp.textContent =
-          (m.flag_code || m.index || '?') + ' ' + (p ? (p.number + '. ' + trimPairText(p)) : '?') +
-          (suggestions.length ? ': ' + suggestions.join(', ') : '') + prio;
+          (m.flag_code || m.index || '?') + ' ' + (p ? (p.number + '. ' + trimPairTextLocalized(p, lang)) : '?') +
+          (suggestions.length ? ': ' + suggestions.map(function (name) { return trimSuggestionText(name, lang); }).join(', ') : '') + prio;
         tags.appendChild(sp);
       });
       card.appendChild(tags);

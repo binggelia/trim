@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.71 - Content Script
+// TRIM v0.72 - Content Script
 // Screenshot markup + Lean Information classification cockpit.
 // One shadow root isolates the entire UI from the host page.
 // ============================================================
@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  var TRIM_BUILD = '0.71-20260910-maintenance';
+  var TRIM_BUILD = '0.72-20260911-localized';
   if (window.__TRIM_V07_BUILD__ === TRIM_BUILD) return;
   window.__TRIM_V07_BUILD__ = TRIM_BUILD;
   window.__TRIM_V07__ = true;
@@ -141,7 +141,7 @@
 
   chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     if (msg.type === 'TRIM_PING') {
-      sendResponse({ ok: true, version: '0.71' });
+      sendResponse({ ok: true, version: '0.72' });
       return true;
     }
     if (msg.type === 'TRIM_PREPARE') {
@@ -218,7 +218,7 @@
     overlay.innerHTML =
       '<div class="shell">' +
         '<div class="bar">' +
-          '<div class="brand"><b>TRIM</b><span>for Lean Information</span></div>' +
+          '<div class="brand"><b>TRIM</b><span data-k="brandSub"></span></div>' +
           '<span class="tagline" data-k="canSaveTime"></span>' +
           '<button class="link-btn" data-act="help" data-k="vocabHelp"></button>' +
           '<div class="bar-tools">' +
@@ -278,7 +278,7 @@
           '</aside>' +
         '</div>' +
 
-        '<div class="foot"><span>Lean Information framework © Ron Hyams &amp; Andreas Binggeli · <a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0</span><span>v0.71 · local only</span></div>' +
+        '<div class="foot" data-el="foot"></div>' +
 
         '<div class="help-layer hidden" data-el="help">' +
           '<div class="help-box" role="dialog" aria-modal="true">' +
@@ -296,7 +296,7 @@
 
     ['hint', 'src', 'dim', 'pairs', 'oppTitle', 'improveTitle', 'priorityTitle', 'commentTitle',
      'priority', 'note', 'selHint', 'selState', 'scroller', 'wrap', 'shot', 'layer',
-     'count', 'openNote', 'list', 'msg', 'help'].forEach(function (name) {
+     'count', 'openNote', 'list', 'msg', 'help', 'foot'].forEach(function (name) {
       el[name] = overlay.querySelector('[data-el="' + name + '"]');
     });
 
@@ -339,6 +339,18 @@
     el.hint.textContent = t('hintDraw');
     var pageName = (S.page && (S.page.title || S.page.url)) || '';
     el.src.textContent = t('infoCaptured') + ' ' + pageName;
+    if (el.foot) el.foot.innerHTML = footerHtml();
+  }
+
+  function footerHtml() {
+    if (lang === 'de') {
+      return 'Lean Information Framework © Ron Hyams &amp; Andreas Binggeli · ' +
+        '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0 ' +
+        '<span>v0.72 · nur lokal</span>';
+    }
+    return 'Lean Information framework © Ron Hyams &amp; Andreas Binggeli · ' +
+      '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0 ' +
+      '<span>v0.72 · local only</span>';
   }
 
   var drawing = false, sx = 0, sy = 0, box = null;
@@ -432,7 +444,7 @@
   function pairLabel(m) {
     var p = m && m.waste ? trimPair(m.waste) : null;
     if (!p) return t('open');
-    return p.number + '. ' + trimPairText(p);
+    return p.number + '. ' + trimPairTextLocalized(p, lang);
   }
 
   function attributeString(m) {
@@ -552,7 +564,7 @@
       var line2 = document.createElement('small');
       if (!p) line2.textContent = t('pickWaste');
       else if (!m.suggestions.length) line2.textContent = t('pickSol');
-      else line2.textContent = '→ ' + m.suggestions.join(', ');
+      else line2.textContent = '→ ' + m.suggestions.map(function (name) { return trimSuggestionText(name, lang); }).join(', ');
       txt.appendChild(line2);
 
       if (m.note) {
@@ -602,7 +614,7 @@
       var pairBtn = document.createElement('button');
       pairBtn.className = 'pair-btn';
       pairBtn.type = 'button';
-      pairBtn.textContent = p.number + '. ' + trimPairText(p);
+      pairBtn.textContent = p.number + '. ' + trimPairTextLocalized(p, lang);
       var on = !!(m && m.waste === p.id);
       pairBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
       pairBtn.style.borderColor = p.color;
@@ -626,7 +638,7 @@
       guide.className = 'pair-guide';
       var guidance = document.createElement('span');
       guidance.className = 'guidance';
-      guidance.textContent = p.guidance;
+      guidance.textContent = trimPairUi(p, lang).guidance;
       guide.appendChild(guidance);
 
       var chips = document.createElement('span');
@@ -635,7 +647,7 @@
         var b = document.createElement('button');
         b.className = 'suggestion-btn';
         b.type = 'button';
-        b.textContent = name;
+        b.textContent = trimSuggestionText(name, lang);
         var son = !!(m && m.waste === p.id && m.suggestions.indexOf(name) !== -1);
         b.setAttribute('aria-pressed', son ? 'true' : 'false');
         b.style.borderColor = p.color;

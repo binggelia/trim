@@ -1,4 +1,4 @@
-# TRIM Browser Extension – v0.71
+# TRIM Browser Extension – v0.72
 
 ## lean.clarus.news · Andreas Binggeli & Ron Hyams · September 2026
 
@@ -8,9 +8,16 @@ Single-screen cockpit, no backend, no OCR. Everything remains local in the brows
 
 ---
 
-## What changed in v0.71
+## What changed in v0.72
 
-v0.71 is a maintenance release of v0.7. It records and packages two corrections found during testing:
+v0.72 is a maintenance release of v0.7. It keeps the earlier maintenance fixes and adds German localization for the visible cockpit and popup texts when DE is selected:
+
+1. **German UI text translated on the DE path**
+  - The cockpit table headings, section titles, help text, pair labels, guidance, suggestion chips and footer are shown in German when the German language toggle is active.
+  - The popup session list and footer are also translated in the DE view.
+  - Session JSON export remains unchanged and keeps the canonical English data values.
+
+2. **Earlier maintenance fixes retained**
 
 1. **`Alt+Shift+T` capture shortcut fixed and made more robust**
    - The background service worker now resolves the active tab explicitly instead of relying on the optional tab argument from `chrome.commands`.
@@ -21,7 +28,7 @@ v0.71 is a maintenance release of v0.7. It records and packages two corrections 
 
 2. **Framework footer attribution updated**
    - The cockpit and popup footer now credit **Ron Hyams & Andreas Binggeli**.
-   - `lead.clarus.news` is displayed as a clickable link to `https://lead.clarus.news`.
+   - `lean.clarus.news` is displayed as a clickable link to `https://lean.clarus.news`.
    - The link uses `target="_blank"` with `rel="noopener noreferrer"`, so it opens in a new browser tab/window without giving the opened page access to the opener.
 
 There is **no change to the v0.7 session data structure**. For compatibility, session JSON remains `trim.capture.session/0.7` and popup export JSON remains `trim.capture.export/0.7`.
@@ -54,7 +61,7 @@ See also [`CHANGELOG.md`](CHANGELOG.md).
 ## File structure
 
 ```text
-trimV_071/
+trimV_072/
 ├── manifest.json
 ├── CHANGELOG.md
 ├── icons/
@@ -75,20 +82,20 @@ trimV_071/
 
 ## Install in Chrome / Edge / Brave
 
-1. Unzip `trimV_071.zip`.
+1. Unzip `trimV_072.zip`.
 2. Open `chrome://extensions`.
 3. Enable **Developer mode**.
 4. Remove/disable an older unpacked TRIM version, or click **Reload** after replacing its files.
-5. Click **Load unpacked** and select the `trimV_071` folder.
+5. Click **Load unpacked** and select the `trimV_072` folder.
 6. Open `chrome://extensions/shortcuts` and verify that **TRIM – Lean Information Capture** is assigned to `Alt+Shift+T`.
-7. Reload an already-open normal webpage once when testing a freshly installed unpacked extension. v0.71 can also inject its content script into an already-open page when required.
+7. Reload an already-open normal webpage once when testing a freshly installed unpacked extension. v0.72 can also inject its content script into an already-open page when required.
 
 ---
 
 ## Workflow
 
 1. **Capture** – use `Alt+Shift+T`, the toolbar popup's Capture button, the context menu, or select text and click **⚑ TRIM**.
-   - **v0.71 correction:** the keyboard shortcut explicitly resolves the active tab and injects the TRIM content script into already-open pages when needed.
+  - **v0.72 correction:** the keyboard shortcut explicitly resolves the active tab and injects the TRIM content script into already-open pages when needed.
    - Chrome may leave a suggested shortcut unassigned if it conflicts with another extension or desktop shortcut. Check `chrome://extensions/shortcuts` if `Alt+Shift+T` does not react.
    - Chrome internal pages such as `chrome://...` cannot be captured.
 2. **Flag** – drag one or more rectangles on the screenshot. Flags are labelled `A`, `B`, `C`, ….
@@ -127,7 +134,7 @@ Attribute String: Incorrect → Correct: Verified
 
 ---
 
-## JSON data model (v0.7 schema, unchanged in v0.71)
+## JSON data model (v0.7 schema, unchanged in v0.72)
 
 ```json
 {
@@ -193,7 +200,7 @@ The raw two-dimensional position is always retained in JSON, so this mapping can
 | `storage` | save recent sessions locally |
 | `contextMenus` | provide the right-click capture action |
 
-There is no `fetch` call and no backend connection in v0.71.
+There is no `fetch` call and no backend connection in v0.72.
 
 ---
 
@@ -210,7 +217,7 @@ There is no `fetch` call and no backend connection in v0.71.
 
 ## Framework notice
 
-Lean Information framework © **Ron Hyams & Andreas Binggeli** · [lead.clarus.news](https://lean.clarus.news) · CC BY-ND 4.0.
+Lean Information framework © **Ron Hyams & Andreas Binggeli** · [lean.clarus.news](https://lean.clarus.news) · CC BY-ND 4.0.
 
 In the extension UI, the `lean.clarus.news` footer link opens in a new browser tab/window.
 

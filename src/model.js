@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.71 – Shared model
+// TRIM v0.72 – Shared model
 // Lean Information framework (c) Ron Hyams / leaninformation.com
 // CC BY-ND 4.0 – attribute names and pairings are used verbatim.
 // Loaded by content script, service worker (importScripts) and popup.
@@ -36,6 +36,31 @@ var TRIM_PAIRS = [
   }
 ];
 
+var TRIM_PAIR_UI = {
+  de: {
+    meaningless: {
+      wasteful: 'Bedeutungslos', lean: 'Relevant', label: 'Bedeutungslos',
+      guidance: 'Formuliere die benötigte Information klar und knapp.',
+      suggestions: ['Benötigt', 'Einfach']
+    },
+    ambiguous: {
+      wasteful: 'Mehrdeutig', lean: 'Spezifisch', label: 'Mehrdeutig',
+      guidance: 'Benenne, strukturiere und gestalte sie eindeutig.',
+      suggestions: ['Benannt', 'Strukturiert', 'Gestaltet']
+    },
+    incorrect: {
+      wasteful: 'Falsch', lean: 'Richtig', label: 'Falsch',
+      guidance: 'Stelle sicher, dass sie geprüft und freigegeben ist.',
+      suggestions: ['Geprüft', 'Freigegeben']
+    },
+    incomplete: {
+      wasteful: 'Unvollständig', lean: 'Vollständig', label: 'Unvollständig',
+      guidance: 'Mache sie inklusiv, kontextualisiert und übertragbar.',
+      suggestions: ['Inklusiv', 'Kontextualisiert', 'Übertragbar']
+    }
+  }
+};
+
 // Compatibility alias for v0.6 code/data terminology.
 TRIM_PAIRS.forEach(function (p) { p.solutions = p.suggestions; });
 
@@ -50,54 +75,78 @@ function trimPairText(pair) {
   return pair ? pair.wasteful + ' \u2192 ' + pair.lean : '';
 }
 
+function trimPairUi(pair, lang) {
+  if (!pair) return null;
+  var local = TRIM_PAIR_UI[lang] && TRIM_PAIR_UI[lang][pair.id];
+  return local || pair;
+}
+
+function trimPairTextLocalized(pair, lang) {
+  var ui = trimPairUi(pair, lang);
+  return ui ? ui.wasteful + ' \u2192 ' + ui.lean : '';
+}
+
+function trimSuggestionText(name, lang) {
+  if (!name) return name;
+  for (var i = 0; i < TRIM_PAIRS.length; i++) {
+    var pair = TRIM_PAIRS[i];
+    var idx = pair.suggestions.indexOf(name);
+    if (idx < 0) continue;
+    var local = TRIM_PAIR_UI[lang] && TRIM_PAIR_UI[lang][pair.id];
+    if (local && local.suggestions && local.suggestions[idx]) return local.suggestions[idx];
+    return name;
+  }
+  return name;
+}
+
 var TRIM_I18N = {
   de: {
     cockpit: 'TRIM Cockpit', capture: 'Neu aufnehmen', close: 'Schliessen',
     canSaveTime: 'Kannst du Menschen Zeit sparen?', vocabHelp: 'Begriffe & Hilfe',
     marking: 'Markierung', markings: 'Markierungen', open: 'offen',
     partial: 'unvollständig', done: 'vollständig', openCount: 'noch offen',
-    myFlags: 'Meine Flags',
+    myFlags: 'Meine Flags', brandSub: 'für Lean Information',
     noSel: 'Keine Markierung',
-    selHint: 'Ziehe ein Rechteck über der Aufnahme oder wähle eine bestehende Markierung.',
-    pickWaste: 'Wähle das passende Wasteful → Lean Information Attributpaar.',
+    selHint: 'Ziehe ein Rechteck über die Aufnahme oder wähle eine bestehende Markierung.',
+    pickWaste: 'Wähle das beste Attributpaar aus Verschwendung → Lean Information.',
     pickSol: 'Wähle mindestens einen Verbesserungsvorschlag.',
-    complete: 'Klassifikation vollständig.',
+    complete: 'Klassifizierung vollständig.',
     flagLabel: 'Flag', infoCaptured: 'Information erfasst:',
-    opportunity: 'Opportunity',
-    opportunityHint: 'Wähle für dieses Flag das passendste Wasteful → Lean Information Attributpaar (1–4).',
-    wasteLean: 'Wasteful → Lean Information', improvSug: 'Verbesserungsvorschläge',
-    improvement: 'Improvement',
+    opportunity: 'Möglichkeit',
+    opportunityHint: 'Wähle für dieses Flag das passendste Attributpaar aus Verschwendung → Lean Information (1–4).',
+    wasteLean: 'Verschwendung → Lean Information', improvSug: 'Verbesserungsvorschläge',
+    improvement: 'Verbesserung',
     improvementHint: 'Wähle einen oder mehrere Verbesserungsvorschläge. Zusätzliche Hinweise gehören in den Kommentar.',
     priority: 'Priorität', comment: 'Kommentar', optional: 'Optional',
     important: 'Wichtig', urgent: 'Dringend', chooseClick: 'Klicken',
     high: 'Hoch', medium: 'Mittel', low: 'Niedrig',
     prioHint: 'Wie wichtig und wie dringend ist die Verbesserung dieses Flags?',
-    notePh: 'Erkläre Verbesserungsvorschlag und Priorisierung; ergänze bei Bedarf weitere Hinweise.',
+    notePh: 'Erkläre die Verbesserungsvorschläge und die Priorisierung; ergänze bei Bedarf weitere Hinweise.',
     save: 'Session speichern', expJson: 'JSON', expPng: 'Bild',
     needMark: 'Noch keine Markierung gesetzt.',
     needClass: 'Markierungen ohne vollständige Klassifikation: ',
     saved: 'Lokal gespeichert. Sichtbar im Popup der Erweiterung.',
     saveFail: 'Speichern fehlgeschlagen – der lokale Speicher ist voll. Exportiere die Session als JSON.',
-    savedWithTime: 'Danke, dass du Trim genutzt hast. Session abgeschlossen in {time}.',
-    hintDraw: 'Ziehen markiert · 1–4 klassifiziert · Entf löscht · Esc schliesst',
+    savedWithTime: 'Danke, dass du TRIM genutzt hast. Sitzung beendet nach {time}.',
+    hintDraw: 'Ziehen zum Markieren · 1–4 klassifizieren · Entf löscht · Esc schliesst',
     trigger: 'TRIM', discard: 'Markierungen verwerfen und schliessen?',
-    sessions: 'Sessions', noSessions: 'Noch keine Session gespeichert.',
+    sessions: 'Sitzungen', noSessions: 'Noch keine Sitzung gespeichert.',
     captureNow: 'Jetzt aufnehmen', exportAll: 'Alle als JSON', clearAll: 'Alle löschen',
     shortcut: 'Tastenkürzel ändern', confirmClear: 'Alle gespeicherten Sessions löschen?',
     cannotCapture: 'Diese Seite lässt sich nicht aufnehmen (z. B. Browser-Seiten oder der Web Store).',
     helpTitle: 'TRIM Begriffe & Hilfe', helpClose: 'Hilfe schliessen',
-    helpArtifact: 'Artifact – gesamte Informationseinheit, Datei oder Seite, auf der Flags gesetzt werden.',
-    helpSession: 'Session – ein einzelner TRIM-Flagging-Vorgang auf einer Aufnahme.',
-    helpMarkup: 'Markup Screen – die Aufnahme, auf der Markierungen gesetzt und beschriftet werden.',
-    helpPair: 'Attribute Pair – ein Wasteful → Lean Information Paar, z. B. Incorrect → Correct.',
-    helpSuggestion: 'Improvement Suggestion – konkrete Verbesserung innerhalb des gewählten Attributpaars, z. B. Verified.',
-    helpString: 'Attribute String – Attributpaar plus ausgewählte Verbesserungsvorschläge.',
-    helpPriority: 'Priority – Position nach Wichtigkeit und Dringlichkeit; daraus wird Hoch, Mittel oder Niedrig abgeleitet.',
-    helpComment: 'Comment – zusätzliche Erläuterung zu einem Flag.',
-    helpMyFlags: 'My Flags – alle Flags der Session, nach Priorität sortiert. Anklicken zum Bearbeiten.'
+    helpArtifact: 'Artefakt – die gesamte Informationseinheit, Datei oder Seite, auf der Flags gesetzt werden.',
+    helpSession: 'Sitzung – ein einzelner TRIM-Flagging-Vorgang auf einer Aufnahme.',
+    helpMarkup: 'Markierungsbildschirm – die Aufnahme, auf der Markierungen gesetzt und beschriftet werden.',
+    helpPair: 'Attributpaar – ein Paar aus Verschwendung → Lean Information, z. B. Falsch → Richtig.',
+    helpSuggestion: 'Verbesserungsvorschlag – eine konkrete Verbesserung innerhalb des gewählten Paars, z. B. Geprüft.',
+    helpString: 'Attributstring – das Attributpaar plus die ausgewählten Verbesserungsvorschläge.',
+    helpPriority: 'Priorität – Position nach Wichtigkeit und Dringlichkeit; daraus wird Hoch, Mittel oder Niedrig abgeleitet.',
+    helpComment: 'Kommentar – zusätzliche Erläuterung zu einem Flag.',
+    helpMyFlags: 'Meine Flags – alle Flags der Sitzung, nach Priorität sortiert. Anklicken zum Bearbeiten.'
   },
   en: {
-    cockpit: 'TRIM cockpit', capture: 'Capture again', close: 'Close',
+    cockpit: 'TRIM cockpit', capture: 'Capture again', close: 'Close', brandSub: 'for Lean Information',
     canSaveTime: 'Can you save people time?', vocabHelp: 'Vocabulary & Help',
     marking: 'Marking', markings: 'Markings', open: 'open',
     partial: 'incomplete', done: 'complete', openCount: 'still open',

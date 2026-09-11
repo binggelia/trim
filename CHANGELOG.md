@@ -1,5 +1,21 @@
 # TRIM Changelog
 
+## v0.72 — 11 September 2026
+
+Maintenance release based on v0.7.
+
+### Changed
+
+- **German UI localization**
+  - The cockpit and popup now show translated German labels, guidance, help text, and footer copy when DE is selected.
+  - Pair labels and suggestion chips in the German view are localized, while the stored JSON values remain canonical.
+
+### Compatibility
+
+- No data-model change from v0.7.
+- Session schema remains `trim.capture.session/0.7`.
+- Popup export schema remains `trim.capture.export/0.7`.
+
 ## v0.71 — 10 September 2026
 
 Maintenance release based on v0.7.
