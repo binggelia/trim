@@ -414,6 +414,7 @@
       suggestions: [],
       priority: null,
       priorityPosition: null,
+      fixInDays: null,
       note: '',
       text: text || ''
     };
@@ -739,10 +740,82 @@
 
     el.priority.appendChild(matrix);
 
+    var ratingRow = document.createElement('div');
+    ratingRow.className = 'priority-rating-row';
+
+    var ratingLabel = document.createElement('span');
+    ratingLabel.className = 'priority-rating-label';
+    ratingLabel.textContent = t('rating') + ':';
+
     var badge = document.createElement('div');
     badge.className = 'priority-result';
     badge.textContent = m && m.priority ? t(m.priority) : '–';
-    el.priority.appendChild(badge);
+
+    ratingRow.appendChild(ratingLabel);
+    ratingRow.appendChild(badge);
+    el.priority.appendChild(ratingRow);
+
+    var fixWrap = document.createElement('div');
+    fixWrap.className = 'fix-days-wrap';
+
+    var fixLabel = document.createElement('div');
+    fixLabel.className = 'fix-days-label';
+    fixLabel.textContent = t('fixIn');
+
+    fixWrap.appendChild(fixLabel);
+
+    var fixChoices = document.createElement('div');
+    fixChoices.className = 'fix-days-choices';
+
+    [
+      { value: '1', cls: 'fix-red', text: '1' },
+      { value: '2-7', cls: 'fix-yellow', text: '2–7' },
+      { value: '8+', cls: 'fix-green', text: '8+' }
+    ].forEach(function (choice) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className =
+        'fix-days-btn ' +
+        choice.cls +
+        (m && m.fixInDays === choice.value ? ' selected' : '');
+
+      btn.disabled = !m;
+      btn.setAttribute(
+        'aria-pressed',
+        m && m.fixInDays === choice.value ? 'true' : 'false'
+      );
+
+      var dot = document.createElement('span');
+      dot.className = 'fix-days-dot';
+
+      var value = document.createElement('span');
+      value.className = 'fix-days-value';
+      value.textContent = choice.text;
+
+      btn.appendChild(dot);
+      btn.appendChild(value);
+
+      if (m) {
+        btn.onclick = function () {
+          var c = current();
+          if (!c) return;
+
+          c.fixInDays = choice.value;
+          renderAll();
+        };
+      }
+
+      fixChoices.appendChild(btn);
+    });
+
+    var daysLabel = document.createElement('div');
+    daysLabel.className = 'fix-days-days-label';
+    daysLabel.textContent = t('days');
+
+    fixWrap.appendChild(fixChoices);
+    fixWrap.appendChild(daysLabel);
+
+    el.priority.appendChild(fixWrap);
   }
 
   function renderSelection() {
@@ -871,6 +944,7 @@
             important: r5(m.priorityPosition.important),
             urgent: r5(m.priorityPosition.urgent)
           } : null,
+          fix_in_days: m.fixInDays || null,
           attribute_string: attributeString(m),
           comment: m.note || null,
           note: m.note || null

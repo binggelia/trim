@@ -293,6 +293,99 @@
   font-size: 11px;
   font-weight: 700;
 }
+
+.priority-rating-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.priority-rating-label {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.fix-days-wrap {
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.fix-days-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.fix-days-choices {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+}
+
+.fix-days-btn {
+  width: 42px;
+  min-height: 42px;
+  padding: 3px 2px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.fix-days-btn:hover:not(:disabled) {
+  background: rgba(107,119,131,.08);
+}
+
+.fix-days-btn.selected {
+  border-color: var(--ink);
+  background: rgba(107,119,131,.10);
+  font-weight: 700;
+}
+
+.fix-days-btn:disabled {
+  cursor: default;
+  opacity: .45;
+}
+
+.fix-days-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: block;
+}
+
+.fix-red .fix-days-dot {
+  background: #ff4b55;
+}
+
+.fix-yellow .fix-days-dot {
+  background: #ffc928;
+}
+
+.fix-green .fix-days-dot {
+  background: #2dbd69;
+}
+
+.fix-days-value {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.fix-days-days-label {
+  font-size: 10px;
+  color: var(--ink-3);
+}
 .comment-card textarea { width: 100%; min-height: 120px; }
 
 /* Bottom area */
