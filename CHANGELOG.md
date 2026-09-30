@@ -1,5 +1,71 @@
 # TRIM Changelog
 
+## v0.73_TPS — 30 September 2026
+
+TPS scoring release based directly on v0.72d.
+
+### Added
+
+- **TPS – TRIM Priority Score**
+  - Calculated only when all five priority inputs are selected.
+  - Rounded to one decimal place.
+  - Current scoring model is identified as `TPS-1`.
+
+- **TPS-1 components**
+  - Criticality combines Severity and Urgency.
+  - Efficiency combines Minutes Saved and Audience Size.
+  - Impact applies Creation Frequency as a multiplier to Efficiency.
+  - Final TPS combines Criticality and Impact.
+
+### TPS-1 formula
+
+```text
+Criticality =
+    0.70 × Severity
+  + 0.30 × Urgency
+
+Efficiency =
+    sqrt(Minutes Saved × Audience Size)
+
+Impact =
+    Efficiency × (0.50 + 0.50 × Creation Frequency)
+
+TPS =
+    100 × (
+        0.60 × Criticality
+      + 0.40 × Impact
+    )
+```
+
+### Normalized weights
+
+- Urgency: 8+ days = 0.25; 2–7 days = 0.60; 1 day = 1.00
+- Severity: Trivial = 0.20; Minor = 0.40; Moderate = 0.60; Major = 0.80; Critical = 1.00
+- Minutes Saved: 1 = 0.20; 5 = 0.40; 10 = 0.60; 15 = 0.80; 20+ = 1.00
+- Audience Size: 1 = 0.20; 10 = 0.40; 30 = 0.60; 60 = 0.80; 101+ = 1.00
+- Creation Frequency: Once = 0.20; Yearly = 0.30; Quarterly = 0.40; Monthly = 0.60; Weekly = 0.80; Daily = 1.00
+
+### Changed
+
+- `My Score` now displays the calculated TPS.
+- TPS updates immediately when priority inputs change.
+- My Flags sorts complete TPS markings from highest to lowest.
+- Saved-session popup labels show `[TPS n.n]`.
+- TPS badge tooltip exposes Criticality, Efficiency and Impact component values.
+- JSON priority metrics include `score_model: "TPS-1"` and `score`.
+- Extension manifest version is `0.73`.
+- Display version is `0.73_TPS`.
+
+### Compatibility
+
+- Session schema remains `trim.capture.session/0.7`.
+- Popup export schema remains `trim.capture.export/0.7`.
+- Semantic slider values remain unchanged from v0.72d.
+- Existing `priority` and `priority_position` fields remain available for compatibility.
+- TPS is additive metadata inside `priority_metrics`.
+
+---
+
 ## v0.72d — 30 September 2026
 
 Experimental visual-priority branch based on v0.72.

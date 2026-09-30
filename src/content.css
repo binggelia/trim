@@ -746,3 +746,21 @@ textarea:focus { outline: 0; border-color: var(--focus); box-shadow: 0 0 0 3px r
   font-size: 8px;
   line-height: 1.15;
 }
+
+
+/* v0.73_TPS score state */
+
+.v072d-score.tps-ready {
+  font-weight: 800;
+  color: var(--ink);
+  background: #eef5ff;
+  border-color: #9dbce8;
+}
+
+.v072d-score.tps-incomplete {
+  min-width: 132px;
+  white-space: nowrap;
+  opacity: .78;
+  border-style: dashed;
+}
+

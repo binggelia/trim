@@ -1,74 +1,86 @@
-# TRIM Browser Extension – v0.72d
+# TRIM Browser Extension – v0.73_TPS
 
 ## lean.clarus.news · Andreas Binggeli & Ron Hyams · September 2026
 
-Screenshot capture with **multiple alphabetic flags on one image**. Each flag is classified with a complete **Wasteful → Lean Information attribute pair**, one or more **Improvement Suggestions**, an optional comment and, in v0.72d, a visual priority model based on **Urgency, Severity, Minutes Saved, Audience Size and Creation Frequency**.
+Screenshot capture with **multiple alphabetic flags on one image**. Each flag is classified with a complete **Wasteful → Lean Information attribute pair**, one or more **Improvement Suggestions**, an optional comment and a **TPS – TRIM Priority Score** based on **Urgency, Severity, Minutes Saved, Audience Size and Creation Frequency**.
 
 Single-screen cockpit, no backend, no OCR. Everything remains local in the browser.
 
 ---
 
-## What changed in v0.72d
+## What changed in v0.73_TPS
 
-v0.72d is an experimental UI branch based on v0.72. It replaces the original **Important × Urgent** matrix in the cockpit with a compact visual priority model designed for mouse or touchpad use.
+v0.73_TPS branches from v0.72d and keeps the same mouse/touchpad slider interface. It adds **TPS – TRIM Priority Score**, a transparent experimental scoring model for ordering flagged improvements.
 
-### Priority model D
+### Inputs
 
-The model has one direct urgency selector and four vertical discrete sliders.
+TPS uses all five priority inputs already introduced in v0.72d:
 
-#### Criticality
+- **Urgency / Fix in Days**: `1`, `2–7`, `8+`
+- **Severity**: Trivial, Minor, Moderate, Major, Critical
+- **Minutes Saved**: `1`, `5`, `10`, `15`, `20+`
+- **Audience Size**: `1`, `10`, `30`, `60`, `101+`
+- **Creation Frequency**: Once, Yearly, Quarterly, Monthly, Weekly, Daily
 
-- **Urgency / Fix in Days**
-  - `1`
-  - `2–7`
-  - `8+`
+TPS is shown only after all five inputs are selected.
 
-- **Severity**
-  - Trivial
-  - Minor
-  - Moderate
-  - Major
-  - Critical
+### TPS-1 normalization
 
-`Criticality*` is explained in the UI as the realistic worst outcome if the flag is not corrected.
+| Input | Lowest → highest normalized weight |
+|---|---|
+| Urgency | `8+ = .25`, `2–7 = .60`, `1 = 1.00` |
+| Severity | `.20`, `.40`, `.60`, `.80`, `1.00` |
+| Minutes Saved | `.20`, `.40`, `.60`, `.80`, `1.00` |
+| Audience Size | `.20`, `.40`, `.60`, `.80`, `1.00` |
+| Creation Frequency | `Once=.20`, `Yearly=.30`, `Quarterly=.40`, `Monthly=.60`, `Weekly=.80`, `Daily=1.00` |
 
-#### Efficiency
+`Daily` therefore has the highest cadence influence and `Once` the lowest.
 
-- **Minutes Saved**
-  - `1`
-  - `5`
-  - `10`
-  - `15`
-  - `20+`
+### TPS-1 formula
 
-- **Audience Size**
-  - `1`
-  - `10`
-  - `30`
-  - `60`
-  - `101+`
+```text
+Criticality =
+    0.70 × Severity
+  + 0.30 × Urgency
 
-#### Cadence
+Efficiency =
+    sqrt(Minutes Saved × Audience Size)
 
-- **Creation Frequency**
-  - Once
-  - Yearly
-  - Quarterly
-  - Monthly
-  - Weekly
-  - Daily
+Impact =
+    Efficiency × (0.50 + 0.50 × Creation Frequency)
 
-The visual direction is consistent across all four sliders: **higher impact is shown at the top**. Therefore `Daily` is at the top of the frequency slider and `Once` at the bottom.
+TPS =
+    100 × (
+        0.60 × Criticality
+      + 0.40 × Impact
+    )
+```
 
-### Mouse / touchpad operation
+The result is rounded to one decimal place. Because the lowest normalized input weights are greater than zero, a fully completed flag also has a positive baseline TPS; the upper bound is 100.
 
-The four sliders use discrete positions and can be operated by clicking or dragging with a mouse or touchpad. Keyboard input is not required for normal use.
+### Example
 
-### Score
+```text
+Urgency             2–7 days
+Severity            Major
+Minutes Saved       15
+Audience Size       10
+Creation Frequency  Weekly
 
-v0.72d deliberately does **not** calculate a score yet. `My Score` remains `–`, and the exported `score` value remains `null`.
+Criticality         74.0
+Efficiency          56.6
+Impact              50.9
+TPS                 64.8
+```
 
-The scoring formula is planned for v0.73 as the **TPS – TRIM Priority Score**. Separating the slider UI from the scoring formula allows the interaction model to be tested independently from the weighting model.
+### Behaviour
+
+- The score updates immediately when an urgency value or slider value changes.
+- **My Flags** is sorted by TPS from highest to lowest.
+- The popup shows `[TPS n.n]` for saved markings.
+- Hovering the TPS badge shows Criticality, Efficiency and Impact components.
+- JSON export records `score_model: "TPS-1"` and the calculated `score`.
+- Markings without all five TPS inputs show `TPS –` and sort below completed TPS markings.
 
 ### Compatibility
 
@@ -77,7 +89,7 @@ The session and popup schema identifiers remain:
 - `trim.capture.session/0.7`
 - `trim.capture.export/0.7`
 
-v0.72d adds an optional `priority_metrics` object to each marking. Existing consumers should ignore unknown fields if they do not use the new priority model.
+The score is additive metadata inside `priority_metrics`; existing consumers can ignore it.
 
 See also [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -127,7 +139,7 @@ trim/
 
 ## Install in Chrome / Edge / Brave
 
-1. Download or clone the `0.72d` branch.
+1. Download or clone the `0.73_TPS` branch.
 2. Open `chrome://extensions`.
 3. Enable **Developer mode**.
 4. Remove/disable an older unpacked TRIM version, or click **Reload** after replacing its files.
@@ -148,9 +160,10 @@ trim/
 7. **Minutes Saved** – position the slider from 1 to 20+ minutes.
 8. **Audience Size** – position the slider from 1 to 101+ affected people.
 9. **Creation Frequency** – position the slider from Once to Daily.
-10. **Comment** – add optional context to the selected flag.
-11. **My Flags** – click a flag to edit it; click × to delete it.
-12. **Finish** – save locally, export JSON, or export an annotated PNG.
+10. **TPS** – after all five priority values are set, TRIM calculates the TRIM Priority Score automatically.
+11. **Comment** – add optional context to the selected flag.
+12. **My Flags** – complete TPS flags are sorted from highest to lowest; click a flag to edit it and × to delete it.
+13. **Finish** – save locally, export JSON, or export an annotated PNG.
 
 Keyboard inside the cockpit:
 
@@ -158,7 +171,7 @@ Keyboard inside the cockpit:
 - `Delete` / `Backspace`: remove the active flag
 - `Esc`: close Help; if Help is already closed, close the cockpit
 
-The v0.72d priority controls are intended to be fully usable with mouse or touchpad; keyboard interaction is not required for the sliders.
+The v0.73_TPS priority controls remain fully usable with mouse or touchpad; keyboard interaction is not required for the sliders.
 
 ---
 
@@ -183,7 +196,7 @@ Attribute String: Incorrect → Correct: Verified
 
 ## JSON data model
 
-The schema identifier remains `trim.capture.session/0.7`. v0.72d adds `priority_metrics` as an optional additive object.
+The schema identifier remains `trim.capture.session/0.7`. v0.73_TPS keeps `priority_metrics` and adds the calculated TPS score.
 
 ```json
 {
@@ -235,7 +248,8 @@ The schema identifier remains `trim.capture.session/0.7`. v0.72d adds `priority_
         "minutes_saved": "15",
         "audience_size": "10",
         "creation_frequency": "weekly",
-        "score": null
+        "score_model": "TPS-1",
+        "score": 64.8
       },
       "attribute_string": "Incorrect → Correct: Verified",
       "comment": "Wrong word",
@@ -254,11 +268,13 @@ The schema identifier remains `trim.capture.session/0.7`. v0.72d adds `priority_
 | `minutes_saved` | `"1"`, `"5"`, `"10"`, `"15"`, `"20+"` |
 | `audience_size` | `"1"`, `"10"`, `"30"`, `"60"`, `"101+"` |
 | `creation_frequency` | `"once"`, `"yearly"`, `"quarterly"`, `"monthly"`, `"weekly"`, `"daily"` |
-| `score` | `null` in v0.72d |
+| `score_model` | `"TPS-1"` |
+| `score` | TPS rounded to one decimal; `null` until all five inputs are set |
 
-### Planned v0.73
+### TPS data semantics
 
-v0.73 is intended to branch from v0.72d and add the **TPS – TRIM Priority Score**. `Daily` will have the highest frequency influence and `Once` the lowest. The weighting and formula are intentionally kept out of v0.72d so that the slider interaction can be evaluated independently.
+The slider labels remain the canonical semantic values stored in JSON. The normalized weights are an implementation detail of scoring model `TPS-1`. This keeps the original user selections available if the weighting is revised later.
+
 
 ---
 
@@ -272,7 +288,7 @@ v0.73 is intended to branch from v0.72d and add the **TPS – TRIM Priority Scor
 | `storage` | save recent sessions locally |
 | `contextMenus` | provide the right-click capture action |
 
-There is no `fetch` call and no backend connection in v0.72d.
+There is no `fetch` call and no backend connection in v0.73_TPS.
 
 ---
 
@@ -283,8 +299,8 @@ There is no `fetch` call and no backend connection in v0.72d.
 - A shortcut conflict at browser/desktop level can prevent Chrome from assigning `Alt+Shift+T`; verify it under `chrome://extensions/shortcuts`.
 - Local session storage is capped at 10 sessions and uses compressed JPEG thumbnails.
 - No OCR. `selected_text` is only populated when capture starts from an actual browser text selection.
-- The slider value sets and labels are provisional and can be adjusted after user testing.
-- v0.72d does not calculate TPS; `My Score` intentionally remains empty.
+- The slider value sets and labels remain provisional and can be adjusted after user testing.
+- TPS-1 weights and formula are experimental and should be validated with real user cases before being treated as a final prioritization model.
 
 ---
 

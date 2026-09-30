@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "TRIM – Lean Information Capture",
-  "version": "0.72.4",
-  "description": "Capture a screenshot, flag wasteful information spots, classify Lean attributes, and define risk and time properties with visual sliders. Works fully offline.",
+  "version": "0.73",
+  "description": "Capture a screenshot, flag wasteful information spots, classify Lean attributes, and prioritize improvements with TPS – TRIM Priority Score. Works fully offline.",
   "permissions": [
     "activeTab",
     "scripting",
@@ -61,5 +61,5 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "version_name": "0.72d"
+  "version_name": "0.73_TPS"
 }

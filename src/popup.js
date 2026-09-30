@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.72 – Popup
+// TRIM v0.73_TPS – Popup
 // Lists locally stored sessions. External file because Manifest V3
 // blocks inline scripts on extension pages.
 // ============================================================
@@ -84,7 +84,12 @@
         var suggestions = Array.isArray(m.improvement_suggestions)
           ? m.improvement_suggestions
           : (Array.isArray(m.solutions) ? m.solutions : (m.solution ? [m.solution] : []));
-        var prio = m.priority ? (' [' + m.priority + ']') : '';
+        var tps =
+          m.priority_metrics &&
+          typeof m.priority_metrics.score === 'number'
+            ? (' [TPS ' + m.priority_metrics.score.toFixed(1) + ']')
+            : '';
+        var prio = tps || (m.priority ? (' [' + m.priority + ']') : '');
         var sp = document.createElement('span');
         sp.className = 'tag';
         if (p) { sp.style.borderColor = p.color; sp.style.borderStyle = p.style; }

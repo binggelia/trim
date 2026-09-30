@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.72d - Content Script
+// TRIM v0.73_TPS - Content Script
 // Screenshot markup + Lean Information classification cockpit.
 // One shadow root isolates the entire UI from the host page.
 // ============================================================
@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  var TRIM_BUILD = '0.72d-20260930-sliders';
+  var TRIM_BUILD = '0.73_TPS-20260930';
   if (window.__TRIM_V07_BUILD__ === TRIM_BUILD) return;
   window.__TRIM_V07_BUILD__ = TRIM_BUILD;
   window.__TRIM_V07__ = true;
@@ -141,7 +141,7 @@
 
   chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     if (msg.type === 'TRIM_PING') {
-      sendResponse({ ok: true, version: '0.72d' });
+      sendResponse({ ok: true, version: '0.73_TPS' });
       return true;
     }
     if (msg.type === 'TRIM_PREPARE') {
@@ -346,11 +346,11 @@
     if (lang === 'de') {
       return 'Lean Information Framework © Ron Hyams &amp; Andreas Binggeli · ' +
         '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0 ' +
-        '<span>v0.72d · nur lokal</span>';
+        '<span>v0.73_TPS · nur lokal</span>';
     }
     return 'Lean Information framework © Ron Hyams &amp; Andreas Binggeli · ' +
       '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0 ' +
-      '<span>v0.72d · local only</span>';
+      '<span>v0.73_TPS · local only</span>';
   }
 
   var drawing = false, sx = 0, sy = 0, box = null;
@@ -463,6 +463,123 @@
     return out;
   }
 
+  // TPS-1: TRIM Priority Score.
+  // Semantic slider values are retained; only their normalized weights are used
+  // by this formula.
+  var TPS_URGENCY = {
+    '8+': 0.25,
+    '2-7': 0.60,
+    '1': 1.00
+  };
+
+  var TPS_SEVERITY = {
+    trivial: 0.20,
+    minor: 0.40,
+    moderate: 0.60,
+    major: 0.80,
+    critical: 1.00
+  };
+
+  var TPS_MINUTES = {
+    '1': 0.20,
+    '5': 0.40,
+    '10': 0.60,
+    '15': 0.80,
+    '20+': 1.00
+  };
+
+  var TPS_AUDIENCE = {
+    '1': 0.20,
+    '10': 0.40,
+    '30': 0.60,
+    '60': 0.80,
+    '101+': 1.00
+  };
+
+  var TPS_FREQUENCY = {
+    once: 0.20,
+    yearly: 0.30,
+    quarterly: 0.40,
+    monthly: 0.60,
+    weekly: 0.80,
+    daily: 1.00
+  };
+
+  function round1(v) {
+    return Math.round(v * 10) / 10;
+  }
+
+  function tpsResult(metrics) {
+    if (!metrics) return null;
+
+    var urgency = TPS_URGENCY[metrics.urgency];
+    var severity = TPS_SEVERITY[metrics.severity];
+    var minutes = TPS_MINUTES[String(metrics.minutesSaved)];
+    var audience = TPS_AUDIENCE[String(metrics.audienceSize)];
+    var frequency = TPS_FREQUENCY[metrics.creationFrequency];
+
+    if (
+      urgency == null ||
+      severity == null ||
+      minutes == null ||
+      audience == null ||
+      frequency == null
+    ) {
+      return null;
+    }
+
+    // HOW BAD + HOW SOON
+    var criticality = (0.70 * severity) + (0.30 * urgency);
+
+    // HOW BIG
+    var efficiency = Math.sqrt(minutes * audience);
+
+    // Repetition amplifies the efficiency benefit.
+    var impact = efficiency * (0.50 + (0.50 * frequency));
+
+    var score = 100 * (
+      (0.60 * criticality) +
+      (0.40 * impact)
+    );
+
+    return {
+      model: 'TPS-1',
+      score: round1(score),
+      criticality: round1(criticality * 100),
+      efficiency: round1(efficiency * 100),
+      impact: round1(impact * 100)
+    };
+  }
+
+  function updateTps(m) {
+    if (!m || !m.priorityMetrics) return null;
+    var result = tpsResult(m.priorityMetrics);
+    m.priorityMetrics.score = result ? result.score : null;
+    return result;
+  }
+
+  function tpsMissingKey(metrics) {
+    if (!metrics) return 'urgency';
+    if (!metrics.urgency) return 'urgency';
+    if (!metrics.severity) return 'severity';
+    if (!metrics.minutesSaved) return 'minutesSaved';
+    if (!metrics.audienceSize) return 'audienceSize';
+    if (!metrics.creationFrequency) return 'creationFrequency';
+    return null;
+  }
+
+  function tpsBadgeText(metrics, result) {
+    if (result) return 'TPS  ' + result.score.toFixed(1);
+    var missing = tpsMissingKey(metrics);
+    return 'TPS – · ' + t('selectMissing') + ' ' +
+      (missing ? t(missing) : t('priority'));
+  }
+
+  function tpsScore(m) {
+    var result = updateTps(m);
+    return result ? result.score : -1;
+  }
+
   function priorityFromPosition(pos) {
     if (!pos) return null;
     var score = pos.important + pos.urgent;
@@ -484,6 +601,11 @@
 
   function sortedMarks() {
     return S.marks.slice().sort(function (a, b) {
+      var ta = tpsScore(a);
+      var tb = tpsScore(b);
+      if (ta !== tb) return tb - ta;
+
+      // Legacy fallback for markings without a complete TPS.
       var pa = priorityRank(a.priority);
       var pb = priorityRank(b.priority);
       if (pa !== pb) return pa - pb;
@@ -586,7 +708,10 @@
 
       var meta = document.createElement('span');
       meta.className = 'row-meta';
-      meta.textContent = m.priority ? t(m.priority) : '–';
+      var markTps = updateTps(m);
+      meta.textContent = markTps
+        ? ('TPS ' + markTps.score.toFixed(1))
+        : (m.priority ? t(m.priority) : '–');
 
       var kill = document.createElement('button');
       kill.className = 'kill';
@@ -700,9 +825,18 @@
     instruction.textContent = t('clickSlide');
 
     var score = document.createElement('span');
-    score.className = 'v072d-score';
-    score.textContent = t('myScore') + '  ' +
-      (metrics && metrics.score != null ? metrics.score : '–');
+    var currentTps = m ? updateTps(m) : null;
+    score.className = 'v072d-score ' +
+      (currentTps ? 'tps-ready' : 'tps-incomplete');
+    score.textContent = tpsBadgeText(metrics, currentTps);
+    score.title = currentTps
+      ? (
+          t('tpsName') +
+          ' · ' + t('criticality') + ': ' + currentTps.criticality.toFixed(1) +
+          ' · ' + t('efficiency') + ': ' + currentTps.efficiency.toFixed(1) +
+          ' · ' + t('impact') + ': ' + currentTps.impact.toFixed(1)
+        )
+      : t('tpsIncomplete');
 
     topline.appendChild(instruction);
     topline.appendChild(score);
@@ -782,8 +916,9 @@
           var c = current();
           if (!c || !c.priorityMetrics) return;
           c.priorityMetrics.urgency = choice.value;
-          c.priorityMetrics.score = null;
+          updateTps(c);
           renderPriority();
+          renderList();
         };
 
         choices.appendChild(btn);
@@ -859,8 +994,22 @@
         if (!c || !c.priorityMetrics) return;
         var idx = Number(input.value);
         c.priorityMetrics[field] = levels[idx].value;
-        c.priorityMetrics.score = null;
+        var result = updateTps(c);
         activateIndex(idx);
+
+        score.className = 'v072d-score ' +
+          (result ? 'tps-ready' : 'tps-incomplete');
+        score.textContent = tpsBadgeText(c.priorityMetrics, result);
+        score.title = result
+          ? (
+              t('tpsName') +
+              ' · ' + t('criticality') + ': ' + result.criticality.toFixed(1) +
+              ' · ' + t('efficiency') + ': ' + result.efficiency.toFixed(1) +
+              ' · ' + t('impact') + ': ' + result.impact.toFixed(1)
+            )
+          : t('tpsIncomplete');
+
+        renderList();
       };
 
       scale.appendChild(input);
@@ -1046,7 +1195,8 @@
             minutes_saved: m.priorityMetrics.minutesSaved,
             audience_size: m.priorityMetrics.audienceSize,
             creation_frequency: m.priorityMetrics.creationFrequency,
-            score: m.priorityMetrics.score
+            score_model: 'TPS-1',
+            score: (updateTps(m) ? m.priorityMetrics.score : null)
           } : null,
           attribute_string: attributeString(m),
           comment: m.note || null,
