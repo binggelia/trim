@@ -1,5 +1,103 @@
 # TRIM Changelog
 
+## v0.72c — 30 September 2026
+
+Experimental scoring-model branch based on v0.72.
+
+### Added
+
+- **Criticality**
+  - Urgency / Fix in Days
+  - Severity: Low, Medium, High or Critical
+
+- **Efficiency**
+  - Minutes Saved
+  - Audience Size
+
+- **Cadence**
+  - Creation Frequency: Once, Yearly, Monthly, Weekly or Daily
+
+- **Numerical Score**
+  - TRIM calculates a score from Criticality, Efficiency and Cadence.
+  - The score updates when one of the scoring inputs changes.
+
+### Score model
+
+The current experimental formula combines:
+
+- inverse urgency based on Fix in Days
+- severity weight
+- logarithmic Minutes Saved
+- logarithmic Audience Size
+- creation-frequency weight
+
+Severity weights:
+
+- Low = 1
+- Medium = 2
+- High = 3
+- Critical = 4
+
+Creation Frequency weights:
+
+- Once = 1
+- Yearly = 2
+- Monthly = 3
+- Weekly = 4
+- Daily = 5
+
+Current calculation:
+
+```text
+urgency_score = max(1, 10 / urgency_days)
+
+efficiency_score =
+    log10(1 + minutes_saved)
+  + log10(1 + audience_size)
+
+score =
+    urgency_score
+  + (severity_weight × 2)
+  + efficiency_score
+  + frequency_weight
+```
+
+The score is rounded to one decimal place.
+
+The formula is intentionally provisional and intended for user testing.
+
+### Changed
+
+- The v0.72 Important × Urgent matrix is replaced in the cockpit by the v0.72c scoring controls.
+- Priority help text now describes Criticality, Efficiency and Cadence.
+- German and English UI texts were extended for the new scoring model.
+- Extension manifest version is `0.72.3`.
+- Display version is `0.72c`.
+
+### Data model
+
+Each marking can contain:
+
+```json
+"priority_metrics": {
+  "urgency_days": 2,
+  "severity": "high",
+  "minutes_saved": 15,
+  "audience_size": 50,
+  "creation_frequency": "daily",
+  "score": 18.9
+}
+```
+
+### Compatibility
+
+- Session schema identifier remains `trim.capture.session/0.7`.
+- Popup export schema identifier remains `trim.capture.export/0.7`.
+- Existing fields remain available for compatibility.
+- `priority_metrics` is an additive field introduced by v0.72c.
+
+---
+
 ## v0.72 — 11 September 2026
 
 Maintenance release based on v0.7.
@@ -15,6 +113,8 @@ Maintenance release based on v0.7.
 - No data-model change from v0.7.
 - Session schema remains `trim.capture.session/0.7`.
 - Popup export schema remains `trim.capture.export/0.7`.
+
+---
 
 ## v0.71 — 10 September 2026
 
@@ -41,6 +141,8 @@ Maintenance release based on v0.7.
 - No data-model change from v0.7.
 - Session schema remains `trim.capture.session/0.7`.
 - Popup export schema remains `trim.capture.export/0.7`.
+
+---
 
 ## v0.7 — 9 September 2026
 

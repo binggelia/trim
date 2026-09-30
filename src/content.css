@@ -459,3 +459,65 @@ textarea:focus { outline: 0; border-color: var(--focus); box-shadow: 0 0 0 3px r
   text-underline-offset: 2px;
 }
 .trim-ui .foot a:hover { color: #3d4852; }
+
+
+/* v0.72c scoring model */
+.score-group-title {
+  width: 100%;
+  margin-top: 8px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.score-field {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 100px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.score-field label {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.score-field select,
+.score-field input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+}
+
+.score-field input {
+  text-align: right;
+}
+
+.score-result {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding: 7px 9px;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.score-result strong {
+  font-size: 16px;
+}

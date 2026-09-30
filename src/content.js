@@ -414,6 +414,14 @@
       suggestions: [],
       priority: null,
       priorityPosition: null,
+      priorityMetrics: {
+        urgencyDays: null,
+        severity: null,
+        minutesSaved: null,
+        audienceSize: null,
+        creationFrequency: null,
+        score: null
+      },
       note: '',
       text: text || ''
     };
@@ -676,73 +684,188 @@
     });
   }
 
+  function metricNumber(v) {
+    var n = Number(v);
+    return isFinite(n) ? n : 0;
+  }
+
+  function calculatePriorityScore(metrics) {
+    if (!metrics) return null;
+
+    var urgencyDays = metricNumber(metrics.urgencyDays);
+    var minutesSaved = metricNumber(metrics.minutesSaved);
+    var audienceSize = metricNumber(metrics.audienceSize);
+
+    var severityWeights = {
+      low: 1,
+      medium: 2,
+      high: 3,
+      critical: 4
+    };
+
+    var frequencyWeights = {
+      once: 1,
+      yearly: 2,
+      monthly: 3,
+      weekly: 4,
+      daily: 5
+    };
+
+    var severity = severityWeights[metrics.severity] || 0;
+    var frequency = frequencyWeights[metrics.creationFrequency] || 0;
+
+    if (
+      !urgencyDays &&
+      !severity &&
+      !minutesSaved &&
+      !audienceSize &&
+      !frequency
+    ) return null;
+
+    var urgencyScore = urgencyDays > 0 ? Math.max(1, 10 / urgencyDays) : 0;
+    var efficiencyScore =
+      Math.log10(1 + minutesSaved) +
+      Math.log10(1 + audienceSize);
+
+    var score =
+      urgencyScore +
+      (severity * 2) +
+      efficiencyScore +
+      frequency;
+
+    return Math.round(score * 10) / 10;
+  }
+
+  function updatePriorityScore(m) {
+    if (!m || !m.priorityMetrics) return;
+    m.priorityMetrics.score = calculatePriorityScore(m.priorityMetrics);
+  }
+
   function renderPriority() {
     el.priority.innerHTML = '';
     var m = current();
 
-    var matrix = document.createElement('div');
-    matrix.className = 'priority-matrix' + (!m ? ' disabled' : '');
-    matrix.setAttribute('role', 'application');
-    matrix.setAttribute('tabindex', m ? '0' : '-1');
-    matrix.setAttribute('aria-label', t('priority') + ': ' + t('important') + ' / ' + t('urgent'));
+    var metrics = m ? m.priorityMetrics : null;
 
-    var ylab = document.createElement('span');
-    ylab.className = 'axis-y';
-    ylab.textContent = t('important');
-    var xlab = document.createElement('span');
-    xlab.className = 'axis-x';
-    xlab.textContent = t('urgent');
-    var choose = document.createElement('span');
-    choose.className = 'choose';
-    choose.textContent = t('chooseClick');
-    matrix.appendChild(ylab);
-    matrix.appendChild(xlab);
-    matrix.appendChild(choose);
-
-    if (m && m.priorityPosition) {
-      var dot = document.createElement('span');
-      dot.className = 'priority-dot';
-      dot.style.left = (m.priorityPosition.urgent * 100) + '%';
-      dot.style.top = ((1 - m.priorityPosition.important) * 100) + '%';
-      matrix.appendChild(dot);
+    function addGroup(titleKey) {
+      var title = document.createElement('div');
+      title.className = 'score-group-title';
+      title.textContent = t(titleKey);
+      el.priority.appendChild(title);
     }
 
-    if (m) {
-      matrix.onclick = function (ev) {
+    function addSelect(labelKey, field, choices) {
+      var row = document.createElement('div');
+      row.className = 'score-field';
+
+      var label = document.createElement('label');
+      label.textContent = t(labelKey);
+
+      var select = document.createElement('select');
+      select.disabled = !m;
+
+      var empty = document.createElement('option');
+      empty.value = '';
+      empty.textContent = '–';
+      select.appendChild(empty);
+
+      choices.forEach(function (choice) {
+        var opt = document.createElement('option');
+        opt.value = choice.value;
+        opt.textContent = choice.label;
+        select.appendChild(opt);
+      });
+
+      if (m && metrics && metrics[field] != null) {
+        select.value = String(metrics[field]);
+      }
+
+      select.onchange = function () {
         var c = current();
         if (!c) return;
-        var r = matrix.getBoundingClientRect();
-        var urgent = clamp((ev.clientX - r.left) / r.width, 0, 1);
-        var important = 1 - clamp((ev.clientY - r.top) / r.height, 0, 1);
-        c.priorityPosition = { urgent: r5(urgent), important: r5(important) };
-        c.priority = priorityFromPosition(c.priorityPosition);
+        c.priorityMetrics[field] = select.value || null;
+        updatePriorityScore(c);
         renderAll();
       };
-      matrix.onkeydown = function (ev) {
-        var c = current();
-        if (!c) return;
-        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(ev.key) < 0) return;
-        ev.preventDefault();
-        var p = c.priorityPosition || { urgent: 0.5, important: 0.5 };
-        var step = ev.shiftKey ? 0.1 : 0.05;
-        if (ev.key === 'ArrowLeft') p.urgent -= step;
-        if (ev.key === 'ArrowRight') p.urgent += step;
-        if (ev.key === 'ArrowUp') p.important += step;
-        if (ev.key === 'ArrowDown') p.important -= step;
-        p.urgent = r5(clamp(p.urgent, 0, 1));
-        p.important = r5(clamp(p.important, 0, 1));
-        c.priorityPosition = p;
-        c.priority = priorityFromPosition(p);
-        renderAll();
-      };
+
+      row.appendChild(label);
+      row.appendChild(select);
+      el.priority.appendChild(row);
     }
 
-    el.priority.appendChild(matrix);
+    function addNumber(labelKey, field, min, step) {
+      var row = document.createElement('div');
+      row.className = 'score-field';
 
-    var badge = document.createElement('div');
-    badge.className = 'priority-result';
-    badge.textContent = m && m.priority ? t(m.priority) : '–';
-    el.priority.appendChild(badge);
+      var label = document.createElement('label');
+      label.textContent = t(labelKey);
+
+      var input = document.createElement('input');
+      input.type = 'number';
+      input.min = min;
+      input.step = step;
+      input.disabled = !m;
+
+      if (m && metrics && metrics[field] != null) {
+        input.value = metrics[field];
+      }
+
+      input.onchange = function () {
+        var c = current();
+        if (!c) return;
+        c.priorityMetrics[field] =
+          input.value === '' ? null : Number(input.value);
+        updatePriorityScore(c);
+        renderAll();
+      };
+
+      row.appendChild(label);
+      row.appendChild(input);
+      el.priority.appendChild(row);
+    }
+
+    addGroup('criticality');
+
+    addNumber('urgencyDays', 'urgencyDays', '1', '1');
+
+    addSelect('severity', 'severity', [
+      { value: 'low', label: t('low') },
+      { value: 'medium', label: t('medium') },
+      { value: 'high', label: t('high') },
+      { value: 'critical', label: t('critical') }
+    ]);
+
+    addGroup('efficiency');
+
+    addNumber('minutesSaved', 'minutesSaved', '0', '1');
+    addNumber('audienceSize', 'audienceSize', '0', '1');
+
+    addGroup('cadence');
+
+    addSelect('creationFrequency', 'creationFrequency', [
+      { value: 'once', label: t('once') },
+      { value: 'yearly', label: t('yearly') },
+      { value: 'monthly', label: t('monthly') },
+      { value: 'weekly', label: t('weekly') },
+      { value: 'daily', label: t('daily') }
+    ]);
+
+    var scoreBox = document.createElement('div');
+    scoreBox.className = 'score-result';
+
+    var scoreLabel = document.createElement('span');
+    scoreLabel.textContent = t('score') + ':';
+
+    var scoreValue = document.createElement('strong');
+    scoreValue.textContent =
+      m && metrics && metrics.score != null
+        ? metrics.score.toFixed(1)
+        : '–';
+
+    scoreBox.appendChild(scoreLabel);
+    scoreBox.appendChild(scoreValue);
+
+    el.priority.appendChild(scoreBox);
   }
 
   function renderSelection() {
@@ -870,6 +993,14 @@
           priority_position: m.priorityPosition ? {
             important: r5(m.priorityPosition.important),
             urgent: r5(m.priorityPosition.urgent)
+          } : null,
+          priority_metrics: m.priorityMetrics ? {
+            urgency_days: m.priorityMetrics.urgencyDays,
+            severity: m.priorityMetrics.severity,
+            minutes_saved: m.priorityMetrics.minutesSaved,
+            audience_size: m.priorityMetrics.audienceSize,
+            creation_frequency: m.priorityMetrics.creationFrequency,
+            score: m.priorityMetrics.score
           } : null,
           attribute_string: attributeString(m),
           comment: m.note || null,
