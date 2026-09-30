@@ -1,5 +1,102 @@
 # TRIM Changelog
 
+## v0.72d — 30 September 2026
+
+Experimental visual-priority branch based on v0.72.
+
+### Added
+
+- **Urgency / Fix in Days**
+  - 1 day
+  - 2–7 days
+  - 8+ days
+
+- **Four vertical discrete sliders**
+  - Severity
+  - Minutes Saved
+  - Audience Size
+  - Creation Frequency
+
+- **Severity values**
+  - Trivial
+  - Minor
+  - Moderate
+  - Major
+  - Critical
+
+- **Minutes Saved values**
+  - 1
+  - 5
+  - 10
+  - 15
+  - 20+
+
+- **Audience Size values**
+  - 1
+  - 10
+  - 30
+  - 60
+  - 101+
+
+- **Creation Frequency values**
+  - Once
+  - Yearly
+  - Quarterly
+  - Monthly
+  - Weekly
+  - Daily
+
+### Interaction
+
+- The four sliders can be operated by clicking or dragging with a mouse or touchpad.
+- Keyboard input is not required for normal slider use.
+- Slider positions are discrete and snap to the defined values.
+- Higher-impact values are visually positioned at the top.
+- `Daily` is therefore at the top of Creation Frequency and `Once` at the bottom.
+
+### Score
+
+- The cockpit includes a `My Score` display.
+- v0.72d deliberately leaves the value unset (`–`).
+- The exported `score` remains `null`.
+- The **TPS – TRIM Priority Score** formula is planned for v0.73.
+
+### Changed
+
+- The v0.72 Important × Urgent priority matrix is replaced in the cockpit by the v0.72d visual priority controls.
+- Priority help text now describes Urgency, Severity, Minutes Saved, Audience Size and Creation Frequency.
+- German and English UI texts were extended for the new model.
+- Extension manifest version is `0.72.4`.
+- Display version is `0.72d`.
+
+### Data model
+
+Each marking can contain:
+
+```json
+"priority_metrics": {
+  "urgency": "2-7",
+  "severity": "major",
+  "minutes_saved": "15",
+  "audience_size": "10",
+  "creation_frequency": "weekly",
+  "score": null
+}
+```
+
+### Compatibility
+
+- Session schema identifier remains `trim.capture.session/0.7`.
+- Popup export schema identifier remains `trim.capture.export/0.7`.
+- Existing `priority` and `priority_position` fields remain available for compatibility.
+- `priority_metrics` is an additive field introduced by v0.72d.
+
+### Next step
+
+v0.73 is planned to branch from v0.72d and implement **TPS – TRIM Priority Score**. Creation Frequency will weight `Daily` highest and `Once` lowest.
+
+---
+
 ## v0.72 — 11 September 2026
 
 Maintenance release based on v0.7.
@@ -15,6 +112,8 @@ Maintenance release based on v0.7.
 - No data-model change from v0.7.
 - Session schema remains `trim.capture.session/0.7`.
 - Popup export schema remains `trim.capture.export/0.7`.
+
+---
 
 ## v0.71 — 10 September 2026
 
@@ -41,6 +140,8 @@ Maintenance release based on v0.7.
 - No data-model change from v0.7.
 - Session schema remains `trim.capture.session/0.7`.
 - Popup export schema remains `trim.capture.export/0.7`.
+
+---
 
 ## v0.7 — 9 September 2026
 

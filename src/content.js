@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.72 - Content Script
+// TRIM v0.72d - Content Script
 // Screenshot markup + Lean Information classification cockpit.
 // One shadow root isolates the entire UI from the host page.
 // ============================================================
@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  var TRIM_BUILD = '0.72-20260911-localized';
+  var TRIM_BUILD = '0.72d-20260930-sliders';
   if (window.__TRIM_V07_BUILD__ === TRIM_BUILD) return;
   window.__TRIM_V07_BUILD__ = TRIM_BUILD;
   window.__TRIM_V07__ = true;
@@ -141,7 +141,7 @@
 
   chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     if (msg.type === 'TRIM_PING') {
-      sendResponse({ ok: true, version: '0.72' });
+      sendResponse({ ok: true, version: '0.72d' });
       return true;
     }
     if (msg.type === 'TRIM_PREPARE') {
@@ -346,11 +346,11 @@
     if (lang === 'de') {
       return 'Lean Information Framework © Ron Hyams &amp; Andreas Binggeli · ' +
         '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0 ' +
-        '<span>v0.72 · nur lokal</span>';
+        '<span>v0.72d · nur lokal</span>';
     }
     return 'Lean Information framework © Ron Hyams &amp; Andreas Binggeli · ' +
       '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0 ' +
-      '<span>v0.72 · local only</span>';
+      '<span>v0.72d · local only</span>';
   }
 
   var drawing = false, sx = 0, sy = 0, box = null;
@@ -414,6 +414,14 @@
       suggestions: [],
       priority: null,
       priorityPosition: null,
+      priorityMetrics: {
+        urgency: null,
+        severity: null,
+        minutesSaved: null,
+        audienceSize: null,
+        creationFrequency: null,
+        score: null
+      },
       note: '',
       text: text || ''
     };
@@ -679,70 +687,231 @@
   function renderPriority() {
     el.priority.innerHTML = '';
     var m = current();
+    var metrics = m ? m.priorityMetrics : null;
 
-    var matrix = document.createElement('div');
-    matrix.className = 'priority-matrix' + (!m ? ' disabled' : '');
-    matrix.setAttribute('role', 'application');
-    matrix.setAttribute('tabindex', m ? '0' : '-1');
-    matrix.setAttribute('aria-label', t('priority') + ': ' + t('important') + ' / ' + t('urgent'));
+    var panel = document.createElement('div');
+    panel.className = 'v072d-panel' + (!m ? ' disabled' : '');
 
-    var ylab = document.createElement('span');
-    ylab.className = 'axis-y';
-    ylab.textContent = t('important');
-    var xlab = document.createElement('span');
-    xlab.className = 'axis-x';
-    xlab.textContent = t('urgent');
-    var choose = document.createElement('span');
-    choose.className = 'choose';
-    choose.textContent = t('chooseClick');
-    matrix.appendChild(ylab);
-    matrix.appendChild(xlab);
-    matrix.appendChild(choose);
+    var topline = document.createElement('div');
+    topline.className = 'v072d-topline';
 
-    if (m && m.priorityPosition) {
-      var dot = document.createElement('span');
-      dot.className = 'priority-dot';
-      dot.style.left = (m.priorityPosition.urgent * 100) + '%';
-      dot.style.top = ((1 - m.priorityPosition.important) * 100) + '%';
-      matrix.appendChild(dot);
+    var instruction = document.createElement('span');
+    instruction.className = 'v072d-instruction';
+    instruction.textContent = t('clickSlide');
+
+    var score = document.createElement('span');
+    score.className = 'v072d-score';
+    score.textContent = t('myScore') + '  ' +
+      (metrics && metrics.score != null ? metrics.score : '–');
+
+    topline.appendChild(instruction);
+    topline.appendChild(score);
+    panel.appendChild(topline);
+
+    var groupRow = document.createElement('div');
+    groupRow.className = 'v072d-groups';
+
+    var criticality = document.createElement('div');
+    criticality.className = 'v072d-group v072d-criticality';
+    criticality.textContent = t('criticalityStar');
+
+    var efficiency = document.createElement('div');
+    efficiency.className = 'v072d-group v072d-efficiency';
+    efficiency.textContent = t('efficiency');
+
+    var cadence = document.createElement('div');
+    cadence.className = 'v072d-group v072d-cadence';
+    cadence.textContent = t('cadence');
+
+    groupRow.appendChild(criticality);
+    groupRow.appendChild(efficiency);
+    groupRow.appendChild(cadence);
+    panel.appendChild(groupRow);
+
+    var grid = document.createElement('div');
+    grid.className = 'v072d-grid';
+
+    function metricValue(field) {
+      return metrics ? metrics[field] : null;
     }
 
-    if (m) {
-      matrix.onclick = function (ev) {
-        var c = current();
-        if (!c) return;
-        var r = matrix.getBoundingClientRect();
-        var urgent = clamp((ev.clientX - r.left) / r.width, 0, 1);
-        var important = 1 - clamp((ev.clientY - r.top) / r.height, 0, 1);
-        c.priorityPosition = { urgent: r5(urgent), important: r5(important) };
-        c.priority = priorityFromPosition(c.priorityPosition);
-        renderAll();
-      };
-      matrix.onkeydown = function (ev) {
-        var c = current();
-        if (!c) return;
-        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(ev.key) < 0) return;
-        ev.preventDefault();
-        var p = c.priorityPosition || { urgent: 0.5, important: 0.5 };
-        var step = ev.shiftKey ? 0.1 : 0.05;
-        if (ev.key === 'ArrowLeft') p.urgent -= step;
-        if (ev.key === 'ArrowRight') p.urgent += step;
-        if (ev.key === 'ArrowUp') p.important += step;
-        if (ev.key === 'ArrowDown') p.important -= step;
-        p.urgent = r5(clamp(p.urgent, 0, 1));
-        p.important = r5(clamp(p.important, 0, 1));
-        c.priorityPosition = p;
-        c.priority = priorityFromPosition(p);
-        renderAll();
-      };
+    function addUrgency() {
+      var col = document.createElement('div');
+      col.className = 'v072d-column v072d-urgency';
+
+      var title = document.createElement('div');
+      title.className = 'v072d-column-title';
+      title.textContent = t('urgency');
+
+      var sub = document.createElement('div');
+      sub.className = 'v072d-column-subtitle';
+      sub.textContent = t('fixInDays');
+
+      col.appendChild(title);
+      col.appendChild(sub);
+
+      var choices = document.createElement('div');
+      choices.className = 'v072d-urgency-choices';
+
+      [
+        { value: '1', label: '1', cls: 'red' },
+        { value: '2-7', label: '2–7', cls: 'yellow' },
+        { value: '8+', label: '8+', cls: 'green' }
+      ].forEach(function (choice) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className =
+          'v072d-urgency-option ' + choice.cls +
+          (metricValue('urgency') === choice.value ? ' selected' : '');
+        btn.disabled = !m;
+        btn.setAttribute(
+          'aria-pressed',
+          metricValue('urgency') === choice.value ? 'true' : 'false'
+        );
+
+        var dot = document.createElement('span');
+        dot.className = 'v072d-urgency-dot';
+
+        var label = document.createElement('span');
+        label.textContent = choice.label;
+
+        btn.appendChild(dot);
+        btn.appendChild(label);
+
+        btn.onclick = function () {
+          var c = current();
+          if (!c || !c.priorityMetrics) return;
+          c.priorityMetrics.urgency = choice.value;
+          c.priorityMetrics.score = null;
+          renderPriority();
+        };
+
+        choices.appendChild(btn);
+      });
+
+      col.appendChild(choices);
+      grid.appendChild(col);
     }
 
-    el.priority.appendChild(matrix);
+    function addSlider(titleKey, field, levels) {
+      var col = document.createElement('div');
+      col.className = 'v072d-column';
 
-    var badge = document.createElement('div');
-    badge.className = 'priority-result';
-    badge.textContent = m && m.priority ? t(m.priority) : '–';
-    el.priority.appendChild(badge);
+      var title = document.createElement('div');
+      title.className = 'v072d-column-title';
+      title.textContent = t(titleKey);
+
+      var sub = document.createElement('div');
+      sub.className = 'v072d-column-subtitle';
+      sub.textContent = '\u00a0';
+
+      col.appendChild(title);
+      col.appendChild(sub);
+
+      var scale = document.createElement('div');
+      scale.className = 'v072d-scale';
+
+      var labels = [];
+      levels.forEach(function (level, idx) {
+        var label = document.createElement('span');
+        label.className = 'v072d-scale-label';
+        label.textContent = level.label;
+        label.style.top =
+          (100 - (idx / Math.max(1, levels.length - 1)) * 100) + '%';
+        scale.appendChild(label);
+        labels.push(label);
+      });
+
+      var input = document.createElement('input');
+      input.type = 'range';
+      input.className = 'v072d-range';
+      input.min = '0';
+      input.max = String(levels.length - 1);
+      input.step = '1';
+      input.disabled = !m;
+      input.setAttribute('aria-label', t(titleKey));
+
+      var currentValue = metricValue(field);
+      var selectedIndex = -1;
+
+      levels.forEach(function (level, idx) {
+        if (String(level.value) === String(currentValue)) selectedIndex = idx;
+      });
+
+      if (selectedIndex < 0) {
+        input.value = '0';
+        input.classList.add('unset');
+      } else {
+        input.value = String(selectedIndex);
+        labels[selectedIndex].classList.add('active');
+      }
+
+      function activateIndex(idx) {
+        labels.forEach(function (label, i) {
+          if (i === idx) label.classList.add('active');
+          else label.classList.remove('active');
+        });
+        input.classList.remove('unset');
+      }
+
+      input.oninput = function () {
+        var c = current();
+        if (!c || !c.priorityMetrics) return;
+        var idx = Number(input.value);
+        c.priorityMetrics[field] = levels[idx].value;
+        c.priorityMetrics.score = null;
+        activateIndex(idx);
+      };
+
+      scale.appendChild(input);
+      col.appendChild(scale);
+      grid.appendChild(col);
+    }
+
+    addUrgency();
+
+    // Arrays are bottom -> top. Highest impact is always visually at the top.
+    addSlider('severity', 'severity', [
+      { value: 'trivial', label: t('trivial') },
+      { value: 'minor', label: t('minor') },
+      { value: 'moderate', label: t('moderate') },
+      { value: 'major', label: t('major') },
+      { value: 'critical', label: t('critical') }
+    ]);
+
+    addSlider('minutesSaved', 'minutesSaved', [
+      { value: '1', label: '1' },
+      { value: '5', label: '5' },
+      { value: '10', label: '10' },
+      { value: '15', label: '15' },
+      { value: '20+', label: '20+' }
+    ]);
+
+    addSlider('audienceSize', 'audienceSize', [
+      { value: '1', label: '1' },
+      { value: '10', label: '10' },
+      { value: '30', label: '30' },
+      { value: '60', label: '60' },
+      { value: '101+', label: '101+' }
+    ]);
+
+    addSlider('creationFrequency', 'creationFrequency', [
+      { value: 'once', label: t('once') },
+      { value: 'yearly', label: t('yearly') },
+      { value: 'quarterly', label: t('quarterly') },
+      { value: 'monthly', label: t('monthly') },
+      { value: 'weekly', label: t('weekly') },
+      { value: 'daily', label: t('daily') }
+    ]);
+
+    panel.appendChild(grid);
+
+    var footnote = document.createElement('div');
+    footnote.className = 'v072d-footnote';
+    footnote.textContent = t('criticalityFootnote');
+    panel.appendChild(footnote);
+
+    el.priority.appendChild(panel);
   }
 
   function renderSelection() {
@@ -870,6 +1039,14 @@
           priority_position: m.priorityPosition ? {
             important: r5(m.priorityPosition.important),
             urgent: r5(m.priorityPosition.urgent)
+          } : null,
+          priority_metrics: m.priorityMetrics ? {
+            urgency: m.priorityMetrics.urgency,
+            severity: m.priorityMetrics.severity,
+            minutes_saved: m.priorityMetrics.minutesSaved,
+            audience_size: m.priorityMetrics.audienceSize,
+            creation_frequency: m.priorityMetrics.creationFrequency,
+            score: m.priorityMetrics.score
           } : null,
           attribute_string: attributeString(m),
           comment: m.note || null,

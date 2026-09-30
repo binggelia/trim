@@ -1,37 +1,83 @@
-# TRIM Browser Extension – v0.72
+# TRIM Browser Extension – v0.72d
 
 ## lean.clarus.news · Andreas Binggeli & Ron Hyams · September 2026
 
-Screenshot capture with **multiple alphabetic flags on one image**. Each flag is classified with a complete **Wasteful → Lean Information attribute pair**, one or more **Improvement Suggestions**, an optional comment and an **Important × Urgent** priority.
+Screenshot capture with **multiple alphabetic flags on one image**. Each flag is classified with a complete **Wasteful → Lean Information attribute pair**, one or more **Improvement Suggestions**, an optional comment and, in v0.72d, a visual priority model based on **Urgency, Severity, Minutes Saved, Audience Size and Creation Frequency**.
 
 Single-screen cockpit, no backend, no OCR. Everything remains local in the browser.
 
 ---
 
-## What changed in v0.72
+## What changed in v0.72d
 
-v0.72 is a maintenance release of v0.7. It keeps the earlier maintenance fixes and adds German localization for the visible cockpit and popup texts when DE is selected:
+v0.72d is an experimental UI branch based on v0.72. It replaces the original **Important × Urgent** matrix in the cockpit with a compact visual priority model designed for mouse or touchpad use.
 
-1. **German UI text translated on the DE path**
-  - The cockpit table headings, section titles, help text, pair labels, guidance, suggestion chips and footer are shown in German when the German language toggle is active.
-  - The popup session list and footer are also translated in the DE view.
-  - Session JSON export remains unchanged and keeps the canonical English data values.
+### Priority model D
 
-2. **Earlier maintenance fixes retained**
+The model has one direct urgency selector and four vertical discrete sliders.
 
-1. **`Alt+Shift+T` capture shortcut fixed and made more robust**
-   - The background service worker now resolves the active tab explicitly instead of relying on the optional tab argument from `chrome.commands`.
-   - When TRIM has just been loaded or reloaded and an already-open page has not yet received the content script, TRIM injects `model.js` and `content.js` into that tab before starting the capture.
-   - An in-page `Alt+Shift+T` fallback is also registered. If Chrome does not route the command through the extension but the keystroke reaches the page, TRIM can still start.
-   - If the shortcut still does not react, check `chrome://extensions/shortcuts`: Chrome can leave a suggested shortcut unassigned when it conflicts with another extension or desktop shortcut.
-   - Protected browser pages such as `chrome://...` and the Chrome Web Store cannot be captured by content scripts.
+#### Criticality
 
-2. **Framework footer attribution updated**
-   - The cockpit and popup footer now credit **Ron Hyams & Andreas Binggeli**.
-   - `lean.clarus.news` is displayed as a clickable link to `https://lean.clarus.news`.
-   - The link uses `target="_blank"` with `rel="noopener noreferrer"`, so it opens in a new browser tab/window without giving the opened page access to the opener.
+- **Urgency / Fix in Days**
+  - `1`
+  - `2–7`
+  - `8+`
 
-There is **no change to the v0.7 session data structure**. For compatibility, session JSON remains `trim.capture.session/0.7` and popup export JSON remains `trim.capture.export/0.7`.
+- **Severity**
+  - Trivial
+  - Minor
+  - Moderate
+  - Major
+  - Critical
+
+`Criticality*` is explained in the UI as the realistic worst outcome if the flag is not corrected.
+
+#### Efficiency
+
+- **Minutes Saved**
+  - `1`
+  - `5`
+  - `10`
+  - `15`
+  - `20+`
+
+- **Audience Size**
+  - `1`
+  - `10`
+  - `30`
+  - `60`
+  - `101+`
+
+#### Cadence
+
+- **Creation Frequency**
+  - Once
+  - Yearly
+  - Quarterly
+  - Monthly
+  - Weekly
+  - Daily
+
+The visual direction is consistent across all four sliders: **higher impact is shown at the top**. Therefore `Daily` is at the top of the frequency slider and `Once` at the bottom.
+
+### Mouse / touchpad operation
+
+The four sliders use discrete positions and can be operated by clicking or dragging with a mouse or touchpad. Keyboard input is not required for normal use.
+
+### Score
+
+v0.72d deliberately does **not** calculate a score yet. `My Score` remains `–`, and the exported `score` value remains `null`.
+
+The scoring formula is planned for v0.73 as the **TPS – TRIM Priority Score**. Separating the slider UI from the scoring formula allows the interaction model to be tested independently from the weighting model.
+
+### Compatibility
+
+The session and popup schema identifiers remain:
+
+- `trim.capture.session/0.7`
+- `trim.capture.export/0.7`
+
+v0.72d adds an optional `priority_metrics` object to each marking. Existing consumers should ignore unknown fields if they do not use the new priority model.
 
 See also [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -46,9 +92,8 @@ See also [`CHANGELOG.md`](CHANGELOG.md).
   4. **Incomplete → Complete**
 - Improvement Suggestions are stored separately from the attribute pair.
 - Attribute strings read, for example: `Incorrect → Correct: Verified`.
-- The cockpit layout is closer to the v0.5 design draft: classification, priority and comment are above the markup screen; **My Flags** sits beside the screenshot.
+- The cockpit layout keeps classification, priority and comment above the markup screen; **My Flags** sits beside the screenshot.
 - Markup labels and My Flags show alphabetic flag codes (`A`, `B`, `C`, …) plus the numbered attribute pair.
-- Priority is selected on an **Important × Urgent** matrix. The UI derives `High`, `Medium` or `Low` for sorting and compact display.
 - `Task / session context` was removed from the cockpit and from new JSON payloads.
 - Added **Vocabulary & Help** with the core TRIM terms.
 - Added the header question **“Can you save people time?”**.
@@ -61,7 +106,7 @@ See also [`CHANGELOG.md`](CHANGELOG.md).
 ## File structure
 
 ```text
-trimV_072/
+trim/
 ├── manifest.json
 ├── CHANGELOG.md
 ├── icons/
@@ -82,36 +127,38 @@ trimV_072/
 
 ## Install in Chrome / Edge / Brave
 
-1. Unzip `trimV_072.zip`.
+1. Download or clone the `0.72d` branch.
 2. Open `chrome://extensions`.
 3. Enable **Developer mode**.
 4. Remove/disable an older unpacked TRIM version, or click **Reload** after replacing its files.
-5. Click **Load unpacked** and select the `trimV_072` folder.
+5. Click **Load unpacked** and select the TRIM project folder.
 6. Open `chrome://extensions/shortcuts` and verify that **TRIM – Lean Information Capture** is assigned to `Alt+Shift+T`.
-7. Reload an already-open normal webpage once when testing a freshly installed unpacked extension. v0.72 can also inject its content script into an already-open page when required.
+7. Reload an already-open normal webpage once when testing a freshly installed unpacked extension.
 
 ---
 
 ## Workflow
 
 1. **Capture** – use `Alt+Shift+T`, the toolbar popup's Capture button, the context menu, or select text and click **⚑ TRIM**.
-  - **v0.72 correction:** the keyboard shortcut explicitly resolves the active tab and injects the TRIM content script into already-open pages when needed.
-   - Chrome may leave a suggested shortcut unassigned if it conflicts with another extension or desktop shortcut. Check `chrome://extensions/shortcuts` if `Alt+Shift+T` does not react.
-   - Chrome internal pages such as `chrome://...` cannot be captured.
 2. **Flag** – drag one or more rectangles on the screenshot. Flags are labelled `A`, `B`, `C`, ….
 3. **Opportunity** – select the best numbered Wasteful → Lean pair with the mouse or keys `1`–`4`.
 4. **Improvement** – select one or more Improvement Suggestions belonging to that pair.
-5. **Priority** – click in the Important × Urgent matrix. The resulting High/Medium/Low class is used to order My Flags.
-6. **Comment** – add optional context to the selected flag.
-7. **My Flags** – click a flag to edit it; click × to delete it.
-8. **Finish** – save locally, export JSON, or export an annotated PNG.
+5. **Urgency** – choose `1`, `2–7` or `8+` days.
+6. **Severity** – position the slider from Trivial to Critical.
+7. **Minutes Saved** – position the slider from 1 to 20+ minutes.
+8. **Audience Size** – position the slider from 1 to 101+ affected people.
+9. **Creation Frequency** – position the slider from Once to Daily.
+10. **Comment** – add optional context to the selected flag.
+11. **My Flags** – click a flag to edit it; click × to delete it.
+12. **Finish** – save locally, export JSON, or export an annotated PNG.
 
 Keyboard inside the cockpit:
 
 - `1`–`4`: select the attribute pair for the active flag
 - `Delete` / `Backspace`: remove the active flag
 - `Esc`: close Help; if Help is already closed, close the cockpit
-- Arrow keys while the priority matrix has focus: move its priority point
+
+The v0.72d priority controls are intended to be fully usable with mouse or touchpad; keyboard interaction is not required for the sliders.
 
 ---
 
@@ -134,12 +181,14 @@ Attribute String: Incorrect → Correct: Verified
 
 ---
 
-## JSON data model (v0.7 schema, unchanged in v0.72)
+## JSON data model
+
+The schema identifier remains `trim.capture.session/0.7`. v0.72d adds `priority_metrics` as an optional additive object.
 
 ```json
 {
   "schema": "trim.capture.session/0.7",
-  "captured_at": "2026-09-10T10:00:00.000Z",
+  "captured_at": "2026-09-30T10:30:00.000Z",
   "session_duration_sec": 80,
   "source": {
     "page_url": "https://example.org/page",
@@ -155,19 +204,38 @@ Attribute String: Incorrect → Correct: Verified
       "index": 1,
       "raw_index": 1,
       "flag_code": "A",
-      "rect_relative": { "x": 0.12, "y": 0.33, "w": 0.21, "h": 0.05 },
-      "rect_pixels": { "x": 230, "y": 356, "w": 403, "h": 54 },
+      "rect_relative": {
+        "x": 0.12,
+        "y": 0.33,
+        "w": 0.21,
+        "h": 0.05
+      },
+      "rect_pixels": {
+        "x": 230,
+        "y": 356,
+        "w": 403,
+        "h": 54
+      },
       "selected_text": null,
       "wasteful_attribute": "incorrect",
       "lean_attribute": "correct",
       "attribute_pair": "Incorrect → Correct",
-      "improvement_suggestions": ["Verified"],
-      "solutions": ["Verified"],
+      "improvement_suggestions": [
+        "Verified"
+      ],
+      "solutions": [
+        "Verified"
+      ],
       "solution": "Verified",
-      "priority": "high",
-      "priority_position": {
-        "important": 0.82,
-        "urgent": 0.73
+      "priority": null,
+      "priority_position": null,
+      "priority_metrics": {
+        "urgency": "2-7",
+        "severity": "major",
+        "minutes_saved": "15",
+        "audience_size": "10",
+        "creation_frequency": "weekly",
+        "score": null
       },
       "attribute_string": "Incorrect → Correct: Verified",
       "comment": "Wrong word",
@@ -177,16 +245,20 @@ Attribute String: Incorrect → Correct: Verified
 }
 ```
 
-### Priority mapping
+### Priority metrics
 
-The matrix stores the two normalized values `important` and `urgent` from `0` to `1`.
-For compact display and sorting, TRIM derives:
+| Field | Values |
+|---|---|
+| `urgency` | `"1"`, `"2-7"`, `"8+"` |
+| `severity` | `"trivial"`, `"minor"`, `"moderate"`, `"major"`, `"critical"` |
+| `minutes_saved` | `"1"`, `"5"`, `"10"`, `"15"`, `"20+"` |
+| `audience_size` | `"1"`, `"10"`, `"30"`, `"60"`, `"101+"` |
+| `creation_frequency` | `"once"`, `"yearly"`, `"quarterly"`, `"monthly"`, `"weekly"`, `"daily"` |
+| `score` | `null` in v0.72d |
 
-- **High** when `important + urgent >= 1.35`
-- **Medium** when the sum is `>= 0.75`
-- **Low** below `0.75`
+### Planned v0.73
 
-The raw two-dimensional position is always retained in JSON, so this mapping can be changed later without losing the user's original priority choice.
+v0.73 is intended to branch from v0.72d and add the **TPS – TRIM Priority Score**. `Daily` will have the highest frequency influence and `Once` the lowest. The weighting and formula are intentionally kept out of v0.72d so that the slider interaction can be evaluated independently.
 
 ---
 
@@ -200,7 +272,7 @@ The raw two-dimensional position is always retained in JSON, so this mapping can
 | `storage` | save recent sessions locally |
 | `contextMenus` | provide the right-click capture action |
 
-There is no `fetch` call and no backend connection in v0.72.
+There is no `fetch` call and no backend connection in v0.72d.
 
 ---
 
@@ -211,7 +283,8 @@ There is no `fetch` call and no backend connection in v0.72.
 - A shortcut conflict at browser/desktop level can prevent Chrome from assigning `Alt+Shift+T`; verify it under `chrome://extensions/shortcuts`.
 - Local session storage is capped at 10 sessions and uses compressed JPEG thumbnails.
 - No OCR. `selected_text` is only populated when capture starts from an actual browser text selection.
-- The High/Medium/Low mapping from the priority matrix is provisional and can be adjusted after user testing.
+- The slider value sets and labels are provisional and can be adjusted after user testing.
+- v0.72d does not calculate TPS; `My Score` intentionally remains empty.
 
 ---
 
