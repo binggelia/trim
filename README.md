@@ -1,4 +1,4 @@
-# TRIM Browser Extension – v0.72
+# TRIM Browser Extension – v0.72b
 
 ## lean.clarus.news · Andreas Binggeli & Ron Hyams · September 2026
 
@@ -8,9 +8,31 @@ Single-screen cockpit, no backend, no OCR. Everything remains local in the brows
 
 ---
 
-## What changed in v0.72
+## What changed in v0.72b
 
-v0.72 is a maintenance release of v0.7. It keeps the earlier maintenance fixes and adds German localization for the visible cockpit and popup texts when DE is selected:
+v0.72b is an experimental branch based on v0.72. It extends the existing Important × Urgent priority model with an explicit rating display and a separate target time for fixing a flag.
+
+### Priority model B
+
+1. **Important × Urgent matrix retained**
+   - Priority is still selected by clicking in the two-dimensional Important × Urgent matrix.
+   - TRIM continues to derive the rating **High**, **Medium** or **Low** from the selected position.
+
+2. **Explicit Rating display**
+   - The derived priority class is now labelled **Rating** in the cockpit.
+   - The underlying normalized `important` and `urgent` values remain unchanged.
+
+3. **Fix in Days added**
+   - Each flag can additionally receive a target time horizon:
+     - **1 day**
+     - **2–7 days**
+     - **8+ days**
+   - The value is stored independently from the Important × Urgent position.
+   - JSON export adds the field `fix_in_days`.
+
+4. **v0.72 localization and maintenance fixes retained**
+
+v0.72b keeps all v0.72 functionality, including German localization and the earlier shortcut and footer maintenance fixes:
 
 1. **German UI text translated on the DE path**
   - The cockpit table headings, section titles, help text, pair labels, guidance, suggestion chips and footer are shown in German when the German language toggle is active.
@@ -31,7 +53,7 @@ v0.72 is a maintenance release of v0.7. It keeps the earlier maintenance fixes a
    - `lean.clarus.news` is displayed as a clickable link to `https://lean.clarus.news`.
    - The link uses `target="_blank"` with `rel="noopener noreferrer"`, so it opens in a new browser tab/window without giving the opened page access to the opener.
 
-There is **no change to the v0.7 session data structure**. For compatibility, session JSON remains `trim.capture.session/0.7` and popup export JSON remains `trim.capture.export/0.7`.
+The session and popup schema identifiers remain `trim.capture.session/0.7` and `trim.capture.export/0.7` for compatibility. v0.72b adds the optional marking field `fix_in_days`; existing consumers should ignore unknown fields if they do not use it.
 
 See also [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -101,10 +123,11 @@ trimV_072/
 2. **Flag** – drag one or more rectangles on the screenshot. Flags are labelled `A`, `B`, `C`, ….
 3. **Opportunity** – select the best numbered Wasteful → Lean pair with the mouse or keys `1`–`4`.
 4. **Improvement** – select one or more Improvement Suggestions belonging to that pair.
-5. **Priority** – click in the Important × Urgent matrix. The resulting High/Medium/Low class is used to order My Flags.
-6. **Comment** – add optional context to the selected flag.
-7. **My Flags** – click a flag to edit it; click × to delete it.
-8. **Finish** – save locally, export JSON, or export an annotated PNG.
+5. **Priority** – click in the Important × Urgent matrix. TRIM derives a High/Medium/Low **Rating** from the selected position.
+6. **Fix in Days** – optionally choose a target time horizon: `1`, `2–7`, or `8+` days.
+7. **Comment** – add optional context to the selected flag.
+8. **My Flags** – click a flag to edit it; click × to delete it.
+9. **Finish** – save locally, export JSON, or export an annotated PNG.
 
 Keyboard inside the cockpit:
 
@@ -169,6 +192,7 @@ Attribute String: Incorrect → Correct: Verified
         "important": 0.82,
         "urgent": 0.73
       },
+      "fix_in_days": "2-7",
       "attribute_string": "Incorrect → Correct: Verified",
       "comment": "Wrong word",
       "note": "Wrong word"
@@ -180,13 +204,25 @@ Attribute String: Incorrect → Correct: Verified
 ### Priority mapping
 
 The matrix stores the two normalized values `important` and `urgent` from `0` to `1`.
-For compact display and sorting, TRIM derives:
+For compact display and sorting, TRIM derives the **Rating**:
 
 - **High** when `important + urgent >= 1.35`
 - **Medium** when the sum is `>= 0.75`
 - **Low** below `0.75`
 
 The raw two-dimensional position is always retained in JSON, so this mapping can be changed later without losing the user's original priority choice.
+
+### Fix in Days
+
+v0.72b adds a separate target time horizon to each flag:
+
+| UI value | JSON value |
+|---|---|
+| 1 day | `"1"` |
+| 2–7 days | `"2-7"` |
+| 8+ days | `"8+"` |
+
+The field is exported as `fix_in_days`. It is independent of the High/Medium/Low rating and does not currently change the sorting order of **My Flags**.
 
 ---
 
@@ -200,7 +236,7 @@ The raw two-dimensional position is always retained in JSON, so this mapping can
 | `storage` | save recent sessions locally |
 | `contextMenus` | provide the right-click capture action |
 
-There is no `fetch` call and no backend connection in v0.72.
+There is no `fetch` call and no backend connection in v0.72b.
 
 ---
 
@@ -211,7 +247,7 @@ There is no `fetch` call and no backend connection in v0.72.
 - A shortcut conflict at browser/desktop level can prevent Chrome from assigning `Alt+Shift+T`; verify it under `chrome://extensions/shortcuts`.
 - Local session storage is capped at 10 sessions and uses compressed JPEG thumbnails.
 - No OCR. `selected_text` is only populated when capture starts from an actual browser text selection.
-- The High/Medium/Low mapping from the priority matrix is provisional and can be adjusted after user testing.
+- The High/Medium/Low rating mapping and the Fix-in-Days categories are provisional and can be adjusted after user testing.
 
 ---
 

@@ -1,5 +1,39 @@
 # TRIM Changelog
 
+## v0.72b — 30 September 2026
+
+Experimental priority-model branch based on v0.72.
+
+### Added
+
+- **Rating display**
+  - The existing Important × Urgent matrix is retained.
+  - The derived `High`, `Medium` or `Low` class is explicitly shown as the flag's **Rating**.
+
+- **Fix in Days**
+  - Added a separate target time horizon for each flag.
+  - Available choices:
+    - `1` day
+    - `2–7` days
+    - `8+` days
+  - The selected value is stored with the flag and exported as `fix_in_days`.
+
+### Changed
+
+- Priority help text now explains both the derived Rating and the Fix-in-Days horizon.
+- German and English UI texts were extended for the new priority controls.
+- Extension manifest version is `0.72.2`, with display version `0.72b`.
+
+### Compatibility
+
+- Session schema identifier remains `trim.capture.session/0.7`.
+- Popup export schema identifier remains `trim.capture.export/0.7`.
+- Existing priority fields remain unchanged:
+  - `priority`
+  - `priority_position.important`
+  - `priority_position.urgent`
+- `fix_in_days` is an additive field introduced by v0.72b.
+
 ## v0.72 — 11 September 2026
 
 Maintenance release based on v0.7.
