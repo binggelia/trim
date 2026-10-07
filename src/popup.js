@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.72 – Popup
+// TRIM v0.74c – Popup
 // Lists locally stored sessions. External file because Manifest V3
 // blocks inline scripts on extension pages.
 // ============================================================

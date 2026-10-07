@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "TRIM – Lean Information Capture",
-  "version": "0.72.3",
-  "description": "Capture a screenshot, flag wasteful information spots, classify Lean attributes, add improvement suggestions and calculate a Criticality, Efficiency and Cadence score. Works fully offline.",
+  "version": "0.74.3",
+  "description": "Capture a screenshot, flag wasteful information spots, classify each with Wasteful → Lean attributes, add audience-focused improvement suggestions, comments and a Criticality, Efficiency and Cadence score. Works fully offline.",
   "permissions": [
     "activeTab",
     "scripting",
@@ -61,5 +61,5 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "version_name": "0.72c"
+  "version_name": "0.74c"
 }

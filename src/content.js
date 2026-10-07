@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.72 - Content Script
+// TRIM v0.74c - Content Script
 // Screenshot markup + Lean Information classification cockpit.
 // One shadow root isolates the entire UI from the host page.
 // ============================================================
@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  var TRIM_BUILD = '0.72-20260911-localized';
+  var TRIM_BUILD = '0.74c-20261007-lean-attributes';
   if (window.__TRIM_V07_BUILD__ === TRIM_BUILD) return;
   window.__TRIM_V07_BUILD__ = TRIM_BUILD;
   window.__TRIM_V07__ = true;
@@ -141,7 +141,7 @@
 
   chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     if (msg.type === 'TRIM_PING') {
-      sendResponse({ ok: true, version: '0.72' });
+      sendResponse({ ok: true, version: '0.74c' });
       return true;
     }
     if (msg.type === 'TRIM_PREPARE') {
@@ -346,11 +346,11 @@
     if (lang === 'de') {
       return 'Lean Information Framework © Ron Hyams &amp; Andreas Binggeli · ' +
         '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0 ' +
-        '<span>v0.72 · nur lokal</span>';
+        '<span>v0.74c · nur lokal</span>';
     }
     return 'Lean Information framework © Ron Hyams &amp; Andreas Binggeli · ' +
       '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0 ' +
-      '<span>v0.72 · local only</span>';
+      '<span>v0.74c · local only</span>';
   }
 
   var drawing = false, sx = 0, sy = 0, box = null;

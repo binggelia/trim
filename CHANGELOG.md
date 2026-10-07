@@ -1,5 +1,35 @@
 # TRIM Changelog
 
+## v0.74c — 7 October 2026
+
+Lean Information wording update based on the keyboard-oriented v0.72c branch.
+
+### Changed
+
+- Renamed the classification-table heading from **Improvement Suggestions** to **Improvement Suggestions for its Audience**.
+- Updated **Incorrect → Correct**:
+  - Guidance is now `Ensure it is authentic and governed.`
+  - `Verified` is replaced by `Authentic`.
+  - `Governed` remains unchanged.
+- Updated **Incomplete → Complete**:
+  - Guidance is now `Keep it inclusive and contextualized.`
+  - Suggestions are now `Inclusive` and `Contextualized`.
+  - `Transferable` is removed.
+- Meaningless → Relevant and Ambiguous → Specific remain unchanged.
+- Updated German UI equivalents for the changed guidance and suggestions.
+- Extension manifest version is `0.74.3`.
+- Display version is `0.74c`.
+
+### Compatibility
+
+- Session schema remains `trim.capture.session/0.7`.
+- Popup export schema remains `trim.capture.export/0.7`.
+- Canonical stored suggestion value `Verified` changes to `Authentic` for new markings.
+- `Transferable` is no longer offered for new markings.
+- Existing historical session JSON is not migrated automatically.
+
+---
+
 ## v0.72c — 30 September 2026
 
 Experimental scoring-model branch based on v0.72.

@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.72 – Background Service Worker
+// TRIM v0.74c – Background Service Worker
 // Owns: keyboard command, context menu, tab capture, local storage.
 // No network access anywhere in this version.
 // ============================================================
@@ -17,7 +17,7 @@ chrome.runtime.onInstalled.addListener(function () {
       contexts: ['page', 'selection', 'image']
     });
   });
-  console.log('[TRIM] v0.72 installed – local only, no backend.');
+  console.log('[TRIM] v0.74c installed – local only, no backend.');
 });
 
 // Do not rely on the optional `tab` argument of chrome.commands.onCommand.

@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.72 – Shared model
+// TRIM v0.74c – Shared model
 // Lean Information framework (c) Ron Hyams / leaninformation.com
 // CC BY-ND 4.0 – attribute names and pairings are used verbatim.
 // Loaded by content script, service worker (importScripts) and popup.
@@ -24,15 +24,15 @@ var TRIM_PAIRS = [
     id: 'incorrect', number: 3,
     wasteful: 'Incorrect', lean: 'Correct', label: 'Incorrect',
     color: '#cc79a7', style: 'double',
-    guidance: 'Ensure it is well verified and governed.',
-    suggestions: ['Verified', 'Governed']
+    guidance: 'Ensure it is authentic and governed.',
+    suggestions: ['Authentic', 'Governed']
   },
   {
     id: 'incomplete', number: 4,
     wasteful: 'Incomplete', lean: 'Complete', label: 'Incomplete',
     color: '#009e73', style: 'dotted',
-    guidance: 'Make it inclusive, contextualized, and transferable.',
-    suggestions: ['Inclusive', 'Contextualized', 'Transferable']
+    guidance: 'Keep it inclusive and contextualized.',
+    suggestions: ['Inclusive', 'Contextualized']
   }
 ];
 
@@ -50,13 +50,13 @@ var TRIM_PAIR_UI = {
     },
     incorrect: {
       wasteful: 'Falsch', lean: 'Richtig', label: 'Falsch',
-      guidance: 'Stelle sicher, dass sie geprüft und freigegeben ist.',
-      suggestions: ['Geprüft', 'Freigegeben']
+      guidance: 'Stelle sicher, dass sie authentisch und gesteuert ist.',
+      suggestions: ['Authentisch', 'Gesteuert']
     },
     incomplete: {
       wasteful: 'Unvollständig', lean: 'Vollständig', label: 'Unvollständig',
-      guidance: 'Mache sie inklusiv, kontextualisiert und übertragbar.',
-      suggestions: ['Inklusiv', 'Kontextualisiert', 'Übertragbar']
+      guidance: 'Halte sie inklusiv und kontextualisiert.',
+      suggestions: ['Inklusiv', 'Kontextualisiert']
     }
   }
 };
@@ -114,7 +114,7 @@ var TRIM_I18N = {
     flagLabel: 'Flag', infoCaptured: 'Information erfasst:',
     opportunity: 'Möglichkeit',
     opportunityHint: 'Wähle für dieses Flag das passendste Attributpaar aus Verschwendung → Lean Information (1–4).',
-    wasteLean: 'Verschwendung → Lean Information', improvSug: 'Verbesserungsvorschläge',
+    wasteLean: 'Verschwendung → Lean Information', improvSug: 'Verbesserungsvorschläge für die Zielgruppe',
     improvement: 'Verbesserung',
     improvementHint: 'Wähle einen oder mehrere Verbesserungsvorschläge. Zusätzliche Hinweise gehören in den Kommentar.',
     priority: 'Priorität', comment: 'Kommentar', optional: 'Optional',
@@ -153,7 +153,7 @@ var TRIM_I18N = {
     helpSession: 'Sitzung – ein einzelner TRIM-Flagging-Vorgang auf einer Aufnahme.',
     helpMarkup: 'Markierungsbildschirm – die Aufnahme, auf der Markierungen gesetzt und beschriftet werden.',
     helpPair: 'Attributpaar – ein Paar aus Verschwendung → Lean Information, z. B. Falsch → Richtig.',
-    helpSuggestion: 'Verbesserungsvorschlag – eine konkrete Verbesserung innerhalb des gewählten Paars, z. B. Geprüft.',
+    helpSuggestion: 'Verbesserungsvorschlag – eine konkrete Verbesserung innerhalb des gewählten Paars, z. B. Authentisch.',
     helpString: 'Attributstring – das Attributpaar plus die ausgewählten Verbesserungsvorschläge.',
     helpPriority: 'Priorität – in v0.72c wird ein Score aus Kritikalität, Effizienz und Kadenz gebildet. Berücksichtigt werden Dringlichkeit, Schweregrad, eingesparte Zeit, Anzahl Betroffene und Erstellungshäufigkeit.',
     helpComment: 'Kommentar – zusätzliche Erläuterung zu einem Flag.',
@@ -173,7 +173,7 @@ var TRIM_I18N = {
     flagLabel: 'Flag', infoCaptured: 'Information Captured:',
     opportunity: 'Opportunity',
     opportunityHint: 'Select this flag’s best Wasteful → Lean Information attribute pair (1–4).',
-    wasteLean: 'Wasteful → Lean Information', improvSug: 'Improvement Suggestions',
+    wasteLean: 'Wasteful → Lean Information', improvSug: 'Improvement Suggestions for its Audience',
     improvement: 'Improvement',
     improvementHint: 'Select one or more improvement suggestions. Use Comments for any additional input.',
     priority: 'Priority', comment: 'Comment', optional: 'Optional',
@@ -212,7 +212,7 @@ var TRIM_I18N = {
     helpSession: 'Session – one TRIM flagging experience on a capture.',
     helpMarkup: 'Markup Screen – the capture where flags are planted and labelled.',
     helpPair: 'Attribute Pair – one Wasteful → Lean Information pair, e.g. Incorrect → Correct.',
-    helpSuggestion: 'Improvement Suggestion – a concrete improvement within the selected pair, e.g. Verified.',
+    helpSuggestion: 'Improvement Suggestion – a concrete improvement within the selected pair, e.g. Authentic.',
     helpString: 'Attribute String – the attribute pair plus the selected improvement suggestions.',
     helpPriority: 'Priority – v0.72c calculates a score from Criticality, Efficiency and Cadence using urgency, severity, minutes saved, audience size and creation frequency.',
     helpComment: 'Comment – additional input for a flag.',

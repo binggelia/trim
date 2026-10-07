@@ -1,8 +1,8 @@
-# TRIM Browser Extension – v0.72c
+# TRIM Browser Extension – v0.74c
 
 ## lean.clarus.news · Andreas Binggeli & Ron Hyams · September 2026
 
-Screenshot capture with **multiple alphabetic flags on one image**. Each flag is classified with a complete **Wasteful → Lean Information attribute pair**, one or more **Improvement Suggestions**, an optional comment and, in v0.72c, an experimental priority score based on **Criticality**, **Efficiency** and **Cadence**.
+Screenshot capture with **multiple alphabetic flags on one image**. Each flag is classified with a complete **Wasteful → Lean Information attribute pair**, one or more **Improvement Suggestions**, an optional comment and, in v0.74c, an experimental priority score based on **Criticality**, **Efficiency** and **Cadence**.
 
 Single-screen cockpit, no backend, no OCR. Everything remains local in the browser.
 
@@ -47,6 +47,23 @@ See also [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
+## What changed in v0.74c
+
+v0.74c is based on the keyboard-oriented v0.72c branch and aligns the Lean Information wording with the updated attribute reference:
+
+- Table heading: **Improvement Suggestions for its Audience**
+- **Incorrect → Correct**
+  - Guidance: `Ensure it is authentic and governed.`
+  - Suggestions: `Authentic`, `Governed`
+- **Incomplete → Complete**
+  - Guidance: `Keep it inclusive and contextualized.`
+  - Suggestions: `Inclusive`, `Contextualized`
+  - `Transferable` is removed
+- Meaningless → Relevant and Ambiguous → Specific remain unchanged.
+- German UI equivalents were updated while canonical JSON values remain English.
+
+---
+
 ## Functional changes introduced in v0.7
 
 - Correct Lean Information data model: the four complete attribute pairs are explicit:
@@ -55,7 +72,7 @@ See also [`CHANGELOG.md`](CHANGELOG.md).
   3. **Incorrect → Correct**
   4. **Incomplete → Complete**
 - Improvement Suggestions are stored separately from the attribute pair.
-- Attribute strings read, for example: `Incorrect → Correct: Verified`.
+- Attribute strings read, for example: `Incorrect → Correct: Authentic`.
 - The cockpit layout is closer to the v0.5 design draft: classification, priority and comment are above the markup screen; **My Flags** sits beside the screenshot.
 - Markup labels and My Flags show alphabetic flag codes (`A`, `B`, `C`, …) plus the numbered attribute pair.
 - `Task / session context` was removed from the cockpit and from new JSON payloads.
@@ -91,7 +108,7 @@ trim/
 
 ## Install in Chrome / Edge / Brave
 
-1. Download or clone the `0.72c` branch.
+1. Download or clone the `0.74c` branch.
 2. Open `chrome://extensions`.
 3. Enable **Developer mode**.
 4. Remove/disable an older unpacked TRIM version, or click **Reload** after replacing its files.
@@ -123,26 +140,26 @@ Keyboard inside the cockpit:
 
 ## Lean Information model
 
-| # | Wasteful | Lean | Improvement Suggestions |
+| # | Wasteful | Lean | Improvement Suggestions for its Audience |
 |---|---|---|---|
 | 1 | Meaningless | Relevant | Needed, Plain |
 | 2 | Ambiguous | Specific | Named, Structured, Designed |
-| 3 | Incorrect | Correct | Verified, Governed |
-| 4 | Incomplete | Complete | Inclusive, Contextualized, Transferable |
+| 3 | Incorrect | Correct | Authentic, Governed |
+| 4 | Incomplete | Complete | Inclusive, Contextualized |
 
 The complete attribute pair and Improvement Suggestions are intentionally separate. For example:
 
 ```text
 Attribute pair: Incorrect → Correct
-Improvement Suggestions: Verified
-Attribute String: Incorrect → Correct: Verified
+Improvement Suggestions: Authentic
+Attribute String: Incorrect → Correct: Authentic
 ```
 
 ---
 
 ## JSON data model
 
-The schema identifier remains `trim.capture.session/0.7`. v0.72c adds `priority_metrics` as an optional additive object.
+The schema identifier remains `trim.capture.session/0.7`. v0.74c retains the optional `priority_metrics` object from v0.72c.
 
 ```json
 {
@@ -180,12 +197,12 @@ The schema identifier remains `trim.capture.session/0.7`. v0.72c adds `priority_
       "lean_attribute": "correct",
       "attribute_pair": "Incorrect → Correct",
       "improvement_suggestions": [
-        "Verified"
+        "Authentic"
       ],
       "solutions": [
-        "Verified"
+        "Authentic"
       ],
-      "solution": "Verified",
+      "solution": "Authentic",
       "priority": null,
       "priority_position": null,
       "priority_metrics": {
@@ -196,7 +213,7 @@ The schema identifier remains `trim.capture.session/0.7`. v0.72c adds `priority_
         "creation_frequency": "daily",
         "score": 18.9
       },
-      "attribute_string": "Incorrect → Correct: Verified",
+      "attribute_string": "Incorrect → Correct: Authentic",
       "comment": "Wrong word",
       "note": "Wrong word"
     }
@@ -271,7 +288,7 @@ The scoring model is intentionally experimental. Its purpose is to make the prio
 | `storage` | save recent sessions locally |
 | `contextMenus` | provide the right-click capture action |
 
-There is no `fetch` call and no backend connection in v0.72c.
+There is no `fetch` call and no backend connection in v0.74c.
 
 ---
 
