@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.74c - Content Script
+// Trim v0.75c - Content Script
 // Screenshot markup + Lean Information classification cockpit.
 // One shadow root isolates the entire UI from the host page.
 // ============================================================
@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  var TRIM_BUILD = '0.74c-20261007-lean-attributes';
+  var TRIM_BUILD = '0.75c-20261007-feedback-help';
   if (window.__TRIM_V07_BUILD__ === TRIM_BUILD) return;
   window.__TRIM_V07_BUILD__ = TRIM_BUILD;
   window.__TRIM_V07__ = true;
@@ -141,7 +141,7 @@
 
   chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     if (msg.type === 'TRIM_PING') {
-      sendResponse({ ok: true, version: '0.74c' });
+      sendResponse({ ok: true, version: '0.75c' });
       return true;
     }
     if (msg.type === 'TRIM_PREPARE') {
@@ -218,7 +218,7 @@
     overlay.innerHTML =
       '<div class="shell">' +
         '<div class="bar">' +
-          '<div class="brand"><b>TRIM</b><span data-k="brandSub"></span></div>' +
+          '<div class="brand"><b>Trim</b><span data-k="brandSub"></span></div>' +
           '<span class="tagline" data-k="canSaveTime"></span>' +
           '<button class="link-btn" data-act="help" data-k="vocabHelp"></button>' +
           '<div class="bar-tools">' +
@@ -265,6 +265,7 @@
           '<aside class="side">' +
             '<section class="card flags-card">' +
               '<div class="flags-head"><h3 data-k="myFlags"></h3><span class="pill" data-el="count">0</span><span data-el="openNote"></span></div>' +
+              '<input class="flags-search" type="search" data-el="flagSearch">' +
               '<div class="list" data-el="list"></div>' +
             '</section>' +
             '<section class="card actions-card">' +
@@ -283,11 +284,34 @@
         '<div class="help-layer hidden" data-el="help">' +
           '<div class="help-box" role="dialog" aria-modal="true">' +
             '<div class="help-head"><h2 data-k="helpTitle"></h2><button class="btn" data-act="helpClose" data-k="helpClose"></button></div>' +
-            '<ul>' +
-              '<li data-k="helpArtifact"></li><li data-k="helpSession"></li><li data-k="helpMarkup"></li>' +
-              '<li data-k="helpPair"></li><li data-k="helpSuggestion"></li><li data-k="helpString"></li>' +
-              '<li data-k="helpPriority"></li><li data-k="helpComment"></li><li data-k="helpMyFlags"></li>' +
-            '</ul>' +
+            '<section class="help-section">' +
+              '<h3 data-k="vocabSearchTitle"></h3>' +
+              '<input class="help-search" type="search" data-el="vocabSearch">' +
+              '<div class="vocab-results" data-el="vocabResults"></div>' +
+            '</section>' +
+            '<section class="help-section">' +
+              '<ul>' +
+                '<li data-k="helpArtifact"></li><li data-k="helpSession"></li><li data-k="helpMarkup"></li>' +
+                '<li data-k="helpPair"></li><li data-k="helpSuggestion"></li><li data-k="helpString"></li>' +
+                '<li data-k="helpPriority"></li><li data-k="helpComment"></li><li data-k="helpMyFlags"></li>' +
+              '</ul>' +
+            '</section>' +
+            '<section class="help-section help-note">' +
+              '<h3 data-k="infoProtectionTitle"></h3>' +
+              '<p data-k="infoProtectionText"></p>' +
+            '</section>' +
+            '<section class="help-section feedback-box">' +
+              '<h3 data-k="feedbackTitle"></h3>' +
+              '<p data-k="feedbackHint"></p>' +
+              '<textarea rows="4" data-el="feedbackText"></textarea>' +
+              '<div class="feedback-actions">' +
+                '<button class="btn btn-primary" data-act="feedbackSave" data-k="feedbackSave"></button>' +
+                '<button class="btn" data-act="feedbackExport" data-k="feedbackExport"></button>' +
+                '<button class="btn" data-act="feedbackClear" data-k="feedbackClear"></button>' +
+                '<span class="feedback-count" data-el="feedbackCount"></span>' +
+              '</div>' +
+              '<div class="feedback-status" data-el="feedbackStatus"></div>' +
+            '</section>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -296,7 +320,8 @@
 
     ['hint', 'src', 'dim', 'pairs', 'oppTitle', 'improveTitle', 'priorityTitle', 'commentTitle',
      'priority', 'note', 'selHint', 'selState', 'scroller', 'wrap', 'shot', 'layer',
-     'count', 'openNote', 'list', 'msg', 'help', 'foot'].forEach(function (name) {
+     'count', 'openNote', 'list', 'flagSearch', 'msg', 'help', 'foot',
+     'vocabSearch', 'vocabResults', 'feedbackText', 'feedbackCount', 'feedbackStatus'].forEach(function (name) {
       el[name] = overlay.querySelector('[data-el="' + name + '"]');
     });
 
@@ -305,9 +330,19 @@
     overlay.querySelector('[data-act="save"]').onclick = saveSession;
     overlay.querySelector('[data-act="json"]').onclick = exportJson;
     overlay.querySelector('[data-act="png"]').onclick = exportPng;
-    overlay.querySelector('[data-act="help"]').onclick = function () { el.help.classList.remove('hidden'); };
+    overlay.querySelector('[data-act="help"]').onclick = function () {
+      el.help.classList.remove('hidden');
+      renderVocabularyResults();
+      updateFeedbackCount();
+    };
     overlay.querySelector('[data-act="helpClose"]').onclick = function () { el.help.classList.add('hidden'); };
     el.help.onclick = function (e) { if (e.target === el.help) el.help.classList.add('hidden'); };
+
+    el.flagSearch.addEventListener('input', renderList);
+    el.vocabSearch.addEventListener('input', renderVocabularyResults);
+    overlay.querySelector('[data-act="feedbackSave"]').onclick = saveTrimFeedback;
+    overlay.querySelector('[data-act="feedbackExport"]').onclick = exportTrimFeedback;
+    overlay.querySelector('[data-act="feedbackClear"]').onclick = clearTrimFeedback;
 
     Array.prototype.forEach.call(overlay.querySelectorAll('[data-lang]'), function (b) {
       b.onclick = function () {
@@ -337,6 +372,11 @@
     });
     el.note.placeholder = t('notePh');
     el.hint.textContent = t('hintDraw');
+    if (el.flagSearch) el.flagSearch.placeholder = t('searchFlagsPh');
+    if (el.vocabSearch) el.vocabSearch.placeholder = t('vocabSearchPh');
+    if (el.feedbackText) el.feedbackText.placeholder = t('feedbackPh');
+    renderVocabularyResults();
+    updateFeedbackCount();
     var pageName = (S.page && (S.page.title || S.page.url)) || '';
     el.src.textContent = t('infoCaptured') + ' ' + pageName;
     if (el.foot) el.foot.innerHTML = footerHtml();
@@ -346,11 +386,171 @@
     if (lang === 'de') {
       return 'Lean Information Framework © Ron Hyams &amp; Andreas Binggeli · ' +
         '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0 ' +
-        '<span>v0.74c · nur lokal</span>';
+        '<span>v0.75c · nur lokal</span>';
     }
     return 'Lean Information framework © Ron Hyams &amp; Andreas Binggeli · ' +
       '<a href="https://lean.clarus.news" target="_blank" rel="noopener noreferrer">lean.clarus.news</a> · CC BY-ND 4.0 ' +
-      '<span>v0.74c · local only</span>';
+      '<span>v0.75c · local only</span>';
+  }
+
+  function vocabularyEntries() {
+    var entries = [];
+
+    TRIM_PAIRS.forEach(function (p) {
+      p.suggestions.forEach(function (suggestion) {
+        entries.push({
+          term: suggestion,
+          pairId: p.id,
+          suggestion: suggestion,
+          aliases: []
+        });
+      });
+    });
+
+    entries.push({
+      term: 'Timeliness',
+      termDe: 'Rechtzeitigkeit',
+      pairId: 'meaningless',
+      suggestion: 'Needed',
+      aliases: ['timely', 'late', 'lateness', 'outdated', 'aktualität', 'rechtzeitig', 'verspätet']
+    });
+
+    return entries;
+  }
+
+  function renderVocabularyResults() {
+    if (!el.vocabResults || !el.vocabSearch) return;
+
+    var q = String(el.vocabSearch.value || '').trim().toLowerCase();
+    el.vocabResults.innerHTML = '';
+
+    if (!q) {
+      var hint = document.createElement('p');
+      hint.className = 'vocab-hint';
+      hint.textContent = t('vocabSearchHint');
+      el.vocabResults.appendChild(hint);
+      return;
+    }
+
+    var matches = vocabularyEntries().filter(function (entry) {
+      var p = trimPair(entry.pairId);
+      if (!p) return false;
+      var local = trimPairUi(p, lang);
+      var suggestionLocal = trimSuggestionText(entry.suggestion, lang);
+      var haystack = [
+        entry.term,
+        entry.termDe || '',
+        entry.aliases.join(' '),
+        p.wasteful,
+        p.lean,
+        local ? local.wasteful : '',
+        local ? local.lean : '',
+        entry.suggestion,
+        suggestionLocal
+      ].join(' ').toLowerCase();
+      return haystack.indexOf(q) !== -1;
+    });
+
+    if (!matches.length) {
+      var empty = document.createElement('p');
+      empty.className = 'vocab-hint';
+      empty.textContent = t('vocabNoResults');
+      el.vocabResults.appendChild(empty);
+      return;
+    }
+
+    matches.slice(0, 12).forEach(function (entry) {
+      var p = trimPair(entry.pairId);
+      var item = document.createElement('div');
+      item.className = 'vocab-item';
+
+      var term = document.createElement('strong');
+      term.textContent =
+        lang === 'de' && entry.termDe ? entry.termDe : entry.term;
+
+      var taxonomy = document.createElement('span');
+      taxonomy.textContent =
+        trimPairTextLocalized(p, lang) + ': ' +
+        trimSuggestionText(entry.suggestion, lang);
+
+      item.appendChild(term);
+      item.appendChild(taxonomy);
+      el.vocabResults.appendChild(item);
+    });
+  }
+
+  function getTrimFeedback(done) {
+    chrome.storage.local.get('trim_feedback', function (r) {
+      done(Array.isArray(r.trim_feedback) ? r.trim_feedback : []);
+    });
+  }
+
+  function updateFeedbackCount() {
+    if (!el.feedbackCount) return;
+    getTrimFeedback(function (items) {
+      el.feedbackCount.textContent =
+        items.length + ' ' + t('feedbackCount');
+    });
+  }
+
+  function saveTrimFeedback() {
+    if (!el.feedbackText) return;
+    var value = String(el.feedbackText.value || '').trim();
+
+    if (!value) {
+      el.feedbackStatus.textContent = t('feedbackEmpty');
+      return;
+    }
+
+    getTrimFeedback(function (items) {
+      items.unshift({
+        id: Date.now(),
+        created_at: new Date().toISOString(),
+        version: '0.75c',
+        language: lang,
+        text: value
+      });
+
+      if (items.length > 50) items = items.slice(0, 50);
+
+      chrome.storage.local.set({ trim_feedback: items }, function () {
+        if (chrome.runtime.lastError) {
+          el.feedbackStatus.textContent = chrome.runtime.lastError.message;
+          return;
+        }
+        el.feedbackText.value = '';
+        el.feedbackStatus.textContent = t('feedbackSaved');
+        updateFeedbackCount();
+      });
+    });
+  }
+
+  function exportTrimFeedback() {
+    getTrimFeedback(function (items) {
+      if (!items.length) {
+        el.feedbackStatus.textContent = t('feedbackEmpty');
+        return;
+      }
+
+      var payload = {
+        schema: 'trim.feedback.export/0.1',
+        exported_at: new Date().toISOString(),
+        feedback: items
+      };
+
+      download(
+        'trim-feedback-' + Date.now() + '.json',
+        new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+      );
+    });
+  }
+
+  function clearTrimFeedback() {
+    if (!window.confirm(t('confirmFeedbackClear'))) return;
+    chrome.storage.local.remove('trim_feedback', function () {
+      el.feedbackStatus.textContent = t('feedbackEmpty');
+      updateFeedbackCount();
+    });
   }
 
   var drawing = false, sx = 0, sy = 0, box = null;
@@ -482,8 +682,20 @@
     return m.priorityPosition ? m.priorityPosition.important + m.priorityPosition.urgent : -1;
   }
 
+  function currentMetricScore(m) {
+    if (!m || !m.priorityMetrics) return -Infinity;
+    updatePriorityScore(m);
+    return typeof m.priorityMetrics.score === 'number'
+      ? m.priorityMetrics.score
+      : -Infinity;
+  }
+
   function sortedMarks() {
     return S.marks.slice().sort(function (a, b) {
+      var ma = currentMetricScore(a);
+      var mb = currentMetricScore(b);
+      if (ma !== mb) return mb - ma;
+
       var pa = priorityRank(a.priority);
       var pb = priorityRank(b.priority);
       if (pa !== pb) return pa - pb;
@@ -542,12 +754,43 @@
 
   function renderList() {
     el.list.innerHTML = '';
-    el.count.textContent = S.marks.length;
+
+    var query = el.flagSearch
+      ? String(el.flagSearch.value || '').trim().toLowerCase()
+      : '';
 
     var open = S.marks.filter(function (m) { return !completeMark(m); }).length;
-    el.openNote.innerHTML = open ? '<span class="pill">' + open + ' ' + t('openCount') + '</span>' : '';
+    el.openNote.innerHTML = open
+      ? '<span class="pill">' + open + ' ' + t('openCount') + '</span>'
+      : '';
 
-    sortedMarks().forEach(function (m) {
+    var visibleMarks = sortedMarks().filter(function (m) {
+      if (!query) return true;
+
+      var p = m.waste ? trimPair(m.waste) : null;
+      var localPair = p ? trimPairTextLocalized(p, lang) : '';
+      var suggestionText = (m.suggestions || []).map(function (name) {
+        return trimSuggestionText(name, lang);
+      }).join(' ');
+
+      var haystack = [
+        m.code || '',
+        p ? trimPairText(p) : '',
+        localPair,
+        (m.suggestions || []).join(' '),
+        suggestionText,
+        m.note || '',
+        m.text || ''
+      ].join(' ').toLowerCase();
+
+      return haystack.indexOf(query) !== -1;
+    });
+
+    el.count.textContent = query
+      ? (visibleMarks.length + '/' + S.marks.length)
+      : S.marks.length;
+
+    visibleMarks.forEach(function (m) {
       var p = m.waste ? trimPair(m.waste) : null;
       var row = document.createElement('div');
       row.className = 'row' + (S.sel === m.n ? ' sel' : '');
@@ -572,7 +815,11 @@
       var line2 = document.createElement('small');
       if (!p) line2.textContent = t('pickWaste');
       else if (!m.suggestions.length) line2.textContent = t('pickSol');
-      else line2.textContent = '→ ' + m.suggestions.map(function (name) { return trimSuggestionText(name, lang); }).join(', ');
+      else {
+        line2.textContent = '→ ' + m.suggestions.map(function (name) {
+          return trimSuggestionText(name, lang);
+        }).join(', ');
+      }
       txt.appendChild(line2);
 
       if (m.note) {
@@ -586,7 +833,10 @@
 
       var meta = document.createElement('span');
       meta.className = 'row-meta';
-      meta.textContent = m.priority ? t(m.priority) : '–';
+      var metricScore = currentMetricScore(m);
+      meta.textContent = metricScore !== -Infinity
+        ? (t('score') + ' ' + metricScore.toFixed(1))
+        : (m.priority ? t(m.priority) : '–');
 
       var kill = document.createElement('button');
       kill.className = 'kill';
@@ -602,11 +852,22 @@
       row.appendChild(txt);
       row.appendChild(right);
 
-      row.onclick = function () { S.sel = m.n; renderAll(); };
-      row.onkeydown = function (ev) {
-        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); S.sel = m.n; renderAll(); }
+      row.onclick = function () {
+        S.sel = m.n;
+        renderAll();
       };
-      kill.onclick = function (ev) { ev.stopPropagation(); removeMark(m.n); };
+      row.onkeydown = function (ev) {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          S.sel = m.n;
+          renderAll();
+        }
+      };
+      kill.onclick = function (ev) {
+        ev.stopPropagation();
+        removeMark(m.n);
+      };
+
       el.list.appendChild(row);
     });
   }

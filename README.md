@@ -1,10 +1,52 @@
-# TRIM Browser Extension – v0.74c
+# Trim Browser Extension – v0.75c
 
 ## lean.clarus.news · Andreas Binggeli & Ron Hyams · September 2026
 
 Screenshot capture with **multiple alphabetic flags on one image**. Each flag is classified with a complete **Wasteful → Lean Information attribute pair**, one or more **Improvement Suggestions**, an optional comment and, in v0.74c, an experimental priority score based on **Criticality**, **Efficiency** and **Cadence**.
 
 Single-screen cockpit, no backend, no OCR. Everything remains local in the browser.
+
+---
+
+## What changed in v0.75c
+
+v0.75c builds on the keyboard-oriented v0.74c branch and incorporates the locally implementable items from **Trim Questions/Comments 260917** and **Trim MVP Functionality v.072**.
+
+### Added
+
+- **Feedback on Trim** inside **Vocabulary & Help**
+  - feedback is stored only in `chrome.storage.local`
+  - nothing is sent automatically
+  - up to 50 local feedback entries are retained
+  - feedback can be exported as JSON or deleted locally
+  - the same form can be used when Trim or its Help is unclear
+
+- **Searchable Vocabulary & Help**
+  - search by Lean Information pair or Improvement Suggestion
+  - explicit taxonomy support for `Timeliness`
+  - `Timeliness → Meaningless → Relevant: Needed`
+
+- **Search My Flags**
+  - filters the current session by flag code, attribute pair, suggestions, selected text, or comment
+
+- **Information protection guidance**
+  - reminds users to check organizational approval, allowed data types, privacy, confidentiality, and proprietary-information rules
+
+### Fixed
+
+- **My Flags priority order**
+  - v0.74c calculated a Criticality/Efficiency/Cadence score but still used the legacy Important/Urgent fields for sorting
+  - v0.75c sorts by the current metrics score from highest to lowest, with the legacy priority only as a fallback
+
+- Popup version display now matches the installed version.
+
+### Naming
+
+The user-facing product name is standardized as **Trim** rather than **TRIM**. Internal technical identifiers such as message names and JavaScript constants remain unchanged where renaming would add compatibility risk.
+
+### Scope
+
+v0.75c remains local-only. It does **not** add a backend, automatic contact workflow, cross-session analytics, central/owner routing, AI duplicate detection, or AI rewriting of comments.
 
 ---
 
@@ -30,7 +72,7 @@ The priority of a flag is described using five input dimensions.
 
 - **Creation Frequency** – Once, Yearly, Monthly, Weekly or Daily.
 
-TRIM calculates a numerical **Score** from these values.
+Trim calculates a numerical **Score** from these values.
 
 v0.72c keeps all other v0.72 functionality, including German localization, classification, comments, local session storage and export.
 
@@ -76,7 +118,7 @@ v0.74c is based on the keyboard-oriented v0.72c branch and aligns the Lean Infor
 - The cockpit layout is closer to the v0.5 design draft: classification, priority and comment are above the markup screen; **My Flags** sits beside the screenshot.
 - Markup labels and My Flags show alphabetic flag codes (`A`, `B`, `C`, …) plus the numbered attribute pair.
 - `Task / session context` was removed from the cockpit and from new JSON payloads.
-- Added **Vocabulary & Help** with the core TRIM terms.
+- Added **Vocabulary & Help** with the core Trim terms.
 - Added the header question **“Can you save people time?”**.
 - Session payload schema: `trim.capture.session/0.7`.
 - Popup export schema: `trim.capture.export/0.7`.
@@ -108,24 +150,24 @@ trim/
 
 ## Install in Chrome / Edge / Brave
 
-1. Download or clone the `0.74c` branch.
+1. Download or clone the `0.75c` branch.
 2. Open `chrome://extensions`.
 3. Enable **Developer mode**.
-4. Remove/disable an older unpacked TRIM version, or click **Reload** after replacing its files.
-5. Click **Load unpacked** and select the TRIM project folder.
-6. Open `chrome://extensions/shortcuts` and verify that **TRIM – Lean Information Capture** is assigned to `Alt+Shift+T`.
+4. Remove/disable an older unpacked Trim version, or click **Reload** after replacing its files.
+5. Click **Load unpacked** and select the Trim project folder.
+6. Open `chrome://extensions/shortcuts` and verify that **Trim – Lean Information Capture** is assigned to `Alt+Shift+T`.
 7. Reload an already-open normal webpage once when testing a freshly installed unpacked extension.
 
 ---
 
 ## Workflow
 
-1. **Capture** – use `Alt+Shift+T`, the toolbar popup's Capture button, the context menu, or select text and click **⚑ TRIM**.
+1. **Capture** – use `Alt+Shift+T`, the toolbar popup's Capture button, the context menu, or select text and click **⚑ Trim**.
 2. **Flag** – drag one or more rectangles on the screenshot. Flags are labelled `A`, `B`, `C`, ….
 3. **Opportunity** – select the best numbered Wasteful → Lean pair with the mouse or keys `1`–`4`.
 4. **Improvement** – select one or more Improvement Suggestions belonging to that pair.
 5. **Priority** – enter the Criticality, Efficiency and Cadence values for the selected flag.
-6. **Score** – TRIM calculates a numerical score from Urgency, Severity, Minutes Saved, Audience Size and Creation Frequency.
+6. **Score** – Trim calculates a numerical score from Urgency, Severity, Minutes Saved, Audience Size and Creation Frequency.
 7. **Comment** – add optional context to the selected flag.
 8. **My Flags** – click a flag to edit it; click × to delete it.
 9. **Finish** – save locally, export JSON, or export an annotated PNG.
@@ -159,7 +201,7 @@ Attribute String: Incorrect → Correct: Authentic
 
 ## JSON data model
 
-The schema identifier remains `trim.capture.session/0.7`. v0.74c retains the optional `priority_metrics` object from v0.72c.
+The schema identifier remains `trim.capture.session/0.7`. v0.75c retains the optional `priority_metrics` object from v0.72c.
 
 ```json
 {
@@ -283,12 +325,12 @@ The scoring model is intentionally experimental. Its purpose is to make the prio
 | Permission | Reason |
 |---|---|
 | `activeTab`, `tabs` | resolve the active tab, read title/URL and capture the visible tab |
-| `scripting` | inject TRIM into an already-open normal page when the extension was freshly loaded/reloaded |
-| `<all_urls>` | allow the in-page TRIM selection trigger to request a capture |
-| `storage` | save recent sessions locally |
+| `scripting` | inject Trim into an already-open normal page when the extension was freshly loaded/reloaded |
+| `<all_urls>` | allow the in-page Trim selection trigger to request a capture |
+| `storage` | save recent sessions and Feedback on Trim locally |
 | `contextMenus` | provide the right-click capture action |
 
-There is no `fetch` call and no backend connection in v0.74c.
+There is no `fetch` call and no backend connection in v0.75c. Feedback on Trim is stored locally in the browser and is not transmitted.
 
 ---
 

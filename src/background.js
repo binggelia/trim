@@ -1,5 +1,5 @@
 // ============================================================
-// TRIM v0.74c – Background Service Worker
+// Trim v0.75c – Background Service Worker
 // Owns: keyboard command, context menu, tab capture, local storage.
 // No network access anywhere in this version.
 // ============================================================
@@ -13,11 +13,11 @@ chrome.runtime.onInstalled.addListener(function () {
   chrome.contextMenus.removeAll(function () {
     chrome.contextMenus.create({
       id: 'trim-capture',
-      title: lang === 'de' ? 'TRIM: diese Seite aufnehmen und markieren' : 'TRIM: capture and mark this page',
+      title: lang === 'de' ? 'Trim: diese Seite aufnehmen und markieren' : 'Trim: capture and mark this page',
       contexts: ['page', 'selection', 'image']
     });
   });
-  console.log('[TRIM] v0.74c installed – local only, no backend.');
+  console.log('[Trim] v0.75c installed – local only, no backend.');
 });
 
 // Do not rely on the optional `tab` argument of chrome.commands.onCommand.

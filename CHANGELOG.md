@@ -1,4 +1,58 @@
-# TRIM Changelog
+# Trim Changelog
+
+## v0.75c — 7 October 2026
+
+Feedback, Vocabulary & Help, search, naming and priority-order update based on v0.74c.
+
+### Added
+
+- **Feedback on Trim**
+  - local-only feedback form inside Vocabulary & Help
+  - stored in `chrome.storage.local`
+  - export as `trim.feedback.export/0.1` JSON
+  - local clear/delete function
+  - no automatic sending or backend
+
+- **Searchable Vocabulary & Help**
+  - searches Lean Information pairs and Improvement Suggestions
+  - includes the requested `Timeliness → Meaningless → Relevant: Needed` taxonomy example
+
+- **Search My Flags**
+  - filters the current session by code, taxonomy, suggestions, selected text and comment
+
+- **Information protection guidance**
+  - covers organizational approval, allowed information, privacy/confidentiality and proprietary-information considerations
+
+### Fixed
+
+- My Flags now sorts primarily by the current Criticality/Efficiency/Cadence score from highest to lowest.
+- Legacy Important/Urgent priority remains only as a fallback.
+- My Flags displays the current score when available.
+- Popup version display is updated to `v0.75c`.
+
+### Changed
+
+- User-facing product naming is standardized as **Trim**.
+- Extension manifest version is `0.75.3`.
+- Display version is `0.75c`.
+
+### Deferred / out of scope for this local-only release
+
+- artifact-level prioritization
+- My Flags analytics across all saved sessions
+- routing flags to a central system or directly to an information owner
+- automatic contact workflow
+- AI duplicate detection
+- AI conversion of free-text comments into Lean vocabulary
+
+### Compatibility
+
+- Session schema remains `trim.capture.session/0.7`.
+- Popup export schema remains `trim.capture.export/0.7`.
+- Feedback uses the separate local export schema `trim.feedback.export/0.1`.
+- Existing historical sessions are not migrated automatically.
+
+---
 
 ## v0.74c — 7 October 2026
 
@@ -48,7 +102,7 @@ Experimental scoring-model branch based on v0.72.
   - Creation Frequency: Once, Yearly, Monthly, Weekly or Daily
 
 - **Numerical Score**
-  - TRIM calculates a score from Criticality, Efficiency and Cadence.
+  - Trim calculates a score from Criticality, Efficiency and Cadence.
   - The score updates when one of the scoring inputs changes.
 
 ### Score model
@@ -164,7 +218,7 @@ Maintenance release based on v0.7.
   - Credit now reads: `Lean Information framework © Ron Hyams & Andreas Binggeli`.
   - Add `lead.clarus.news` as a clickable link to `https://lead.clarus.news`.
   - The link opens in a new browser tab/window via `target="_blank"` and uses `rel="noopener noreferrer"`.
-  - Applied to both the TRIM cockpit footer and the extension popup footer.
+  - Applied to both the Trim cockpit footer and the extension popup footer.
 
 ### Compatibility
 
